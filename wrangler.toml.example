@@ -1,0 +1,9 @@
+name = "authc1"
+compatibility_date = "2022-12-13"
+main="src/index.ts"
+
+[[ d1_databases ]]
+binding = "AUTHC1"
+database_name = "authc1"
+database_id = ""
+preview_database_id = ""
