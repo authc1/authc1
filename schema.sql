@@ -33,7 +33,7 @@ CREATE TABLE roles (
 -- Create the applications table
 CREATE TABLE applications (
   id INTEGER PRIMARY KEY AUTOINCREMENT,
-  identifier BLOB NOT NULL,
+  client_id BLOB NOT NULL,
   name TEXT NOT NULL,
   redirect_uri TEXT NOT NULL,
   owner_id INTEGER,
@@ -109,7 +109,7 @@ CREATE TABLE providers_credentials (
 );
 
 -- Insert a new application
-INSERT INTO applications (name, redirect_uri, identifier)
+INSERT INTO applications (name, redirect_uri, client_id)
 VALUES ('My Application', 'http://example.com/redirect', '0x1aec66176882a6ccbc004bcbfc7abdbbe458d90c40');
 
 -- Insert a new provider
@@ -122,4 +122,4 @@ VALUES ('John Doe', 'johndoe@example.com', '1234567890', 'password123', 1, 1);
 
 UPDATE applications
 SET owner_id = 1
-WHERE identifier = '0x1aec66176882a6ccbc004bcbfc7abdbbe458d90c40';
+WHERE client_id = '0x1aec66176882a6ccbc004bcbfc7abdbbe458d90c40';
