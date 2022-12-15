@@ -16,9 +16,11 @@ CREATE TABLE users (
   phone TEXT UNIQUE,
   password TEXT,
   provider_id INTEGER,
+  application_id INTEGER,
   created_at DATETIME DEFAULT CURRENT_TIMESTAMP,
   updated_at DATETIME DEFAULT CURRENT_TIMESTAMP,
-  FOREIGN KEY (provider_id) REFERENCES providers(id)
+  FOREIGN KEY (provider_id) REFERENCES providers(id),
+  FOREIGN KEY (application_id) REFERENCES applications(id)
 );
 
 -- Create the roles table
@@ -31,10 +33,13 @@ CREATE TABLE roles (
 -- Create the applications table
 CREATE TABLE applications (
   id INTEGER PRIMARY KEY AUTOINCREMENT,
+  identifier BLOB NOT NULL,
   name TEXT NOT NULL,
   redirect_uri TEXT NOT NULL,
+  owner_id INTEGER,
   created_at DATETIME DEFAULT CURRENT_TIMESTAMP,
-  updated_at DATETIME DEFAULT CURRENT_TIMESTAMP
+  updated_at DATETIME DEFAULT CURRENT_TIMESTAMP,
+  FOREIGN KEY (owner_id) REFERENCES users(id)
 );
 
 -- Create the access_tokens table
@@ -103,10 +108,18 @@ CREATE TABLE providers_credentials (
   updated_at DATETIME DEFAULT CURRENT_TIMESTAMP
 );
 
--- Insert a new provider into the providers table
+-- Insert a new application
+INSERT INTO applications (name, redirect_uri, identifier)
+VALUES ('My Application', 'http://example.com/redirect', '0x1aec66176882a6ccbc004bcbfc7abdbbe458d90c40');
+
+-- Insert a new provider
 INSERT INTO providers (name, description, created_at, updated_at)
 VALUES ('Email', 'Email login with password.', CURRENT_TIMESTAMP, CURRENT_TIMESTAMP);
 
--- Insert a new user into the users table, referencing the provider we just inserted
-INSERT INTO users (name, email, phone, password, provider_id, created_at, updated_at)
-VALUES ('John Doe', 'johndoe@example.com', '1234567890', 'password123', 1, CURRENT_TIMESTAMP, CURRENT_TIMESTAMP);
+-- Insert a new user, using the values stored in the local variables
+INSERT INTO users (name, email, phone, password, provider_id, application_id)
+VALUES ('John Doe', 'johndoe@example.com', '1234567890', 'password123', 1, 1);
+
+UPDATE applications
+SET owner_id = 1
+WHERE identifier = '0x1aec66176882a6ccbc004bcbfc7abdbbe458d90c40';

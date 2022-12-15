@@ -7,12 +7,11 @@ async function checkIfApplicationExists(c: Context, applicationId: string): Prom
   }
 
   try {
-    const { results } = await c.env.AUTHC1.prepare(
-      "SELECT * FROM applications WHERE id = ?"
-    )
-      .bind(applicationId)
-      .all()
-    if (results?.length) {
+    const total = await c.env.AUTHC1.prepare(
+      "SELECT COUNT(*) as count FROM applications WHERE id = ?"
+    ).bind(applicationId).first('count')
+
+    if (total) {
       return true
     }
 
