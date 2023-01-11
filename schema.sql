@@ -1,115 +1,162 @@
 DROP TABLE IF EXISTS users;
+DROP TABLE IF EXISTS user_providers;
 DROP TABLE IF EXISTS roles;
 DROP TABLE IF EXISTS applications;
-DROP TABLE IF EXISTS access_tokens;
 DROP TABLE IF EXISTS refresh_tokens;
+DROP TABLE IF EXISTS access_tokens;
 DROP TABLE IF EXISTS permissions;
 DROP TABLE IF EXISTS providers;
 DROP TABLE IF EXISTS user_roles;
 DROP TABLE IF EXISTS user_permissions;
 DROP TABLE IF EXISTS providers_credentials;
 
-CREATE TABLE users (
+CREATE TABLE IF NOT EXISTS users (
   id INTEGER PRIMARY KEY AUTOINCREMENT,
+  created_at DATETIME DEFAULT CURRENT_TIMESTAMP,
+  updated_at DATETIME DEFAULT CURRENT_TIMESTAMP,
   name TEXT,
+  nickname TEXT,
+  avatar_url TEXT DEFAULT '' NOT NULL,
   email TEXT UNIQUE,
   phone TEXT UNIQUE,
   password TEXT,
   provider_id INTEGER,
   application_id INTEGER,
-  created_at DATETIME DEFAULT CURRENT_TIMESTAMP,
-  updated_at DATETIME DEFAULT CURRENT_TIMESTAMP,
+  last_login DATETIME,
+  status TEXT,
+  confirmed_at DATETIME,
+  invited_at DATETIME,
+  email_verified BOOLEAN DEFAULT false NOT NULL,
+  phone_number_verified BOOLEAN DEFAULT false NOT NULL,
   FOREIGN KEY (provider_id) REFERENCES providers(id),
   FOREIGN KEY (application_id) REFERENCES applications(id)
 );
 
--- Create the roles table
-CREATE TABLE roles (
-  id INTEGER PRIMARY KEY,
-  name TEXT UNIQUE,
-  created_at DATETIME DEFAULT CURRENT_TIMESTAMP
+CREATE TABLE IF NOT EXISTS user_providers (
+  id INTEGER PRIMARY KEY AUTOINCREMENT,
+  created_at DATETIME DEFAULT CURRENT_TIMESTAMP,
+  updated_at DATETIME DEFAULT CURRENT_TIMESTAMP,
+  user_id uuid NOT NULL,
+  provider_id text NOT NULL,
+  provider_user_id text NOT NULL,
+  UNIQUE (user_id, provider_id),
+  UNIQUE (provider_id, provider_user_id)
 );
 
--- Create the applications table
-CREATE TABLE applications (
+CREATE TABLE IF NOT EXISTS roles (
+  id INTEGER PRIMARY KEY,
+  created_at DATETIME DEFAULT CURRENT_TIMESTAMP,
+  name TEXT UNIQUE
+);
+
+CREATE TABLE IF NOT EXISTS applications (
   id INTEGER PRIMARY KEY AUTOINCREMENT,
-  identifier BLOB NOT NULL,
+  created_at DATETIME DEFAULT CURRENT_TIMESTAMP,
+  updated_at DATETIME DEFAULT CURRENT_TIMESTAMP,
+  client_id BLOB NOT NULL,
   name TEXT NOT NULL,
   redirect_uri TEXT NOT NULL,
   owner_id INTEGER,
-  created_at DATETIME DEFAULT CURRENT_TIMESTAMP,
-  updated_at DATETIME DEFAULT CURRENT_TIMESTAMP,
   FOREIGN KEY (owner_id) REFERENCES users(id)
 );
 
--- Create the access_tokens table
-CREATE TABLE access_tokens (
+CREATE TABLE sessions (
   id INTEGER PRIMARY KEY,
+  created_at DATETIME DEFAULT CURRENT_TIMESTAMP,
+  user_id INTEGER,
+  session_id TEXT,
+  metadata TEXT,
+  ip TEXT,
+  user_agent TEXT,
+  area TEXT,
+  expiration_timestamp DATETIME,
+  email_verify_code TEXT,
+  phone_verify_code TEXT,
+  application_id INTEGER,
+  FOREIGN KEY (user_id) REFERENCES users(id)
+  FOREIGN KEY (application_id) REFERENCES applications (id)
+);
+
+CREATE TABLE IF NOT EXISTS refresh_tokens (
+  id INTEGER PRIMARY KEY AUTOINCREMENT,
+  created_at DATETIME DEFAULT CURRENT_TIMESTAMP,
   token TEXT UNIQUE,
   user_id INTEGER,
   application_id INTEGER,
-  created_at DATETIME DEFAULT CURRENT_TIMESTAMP,
-  updated_at DATETIME DEFAULT CURRENT_TIMESTAMP,
+  expires_at DATETIME NOT NULL,
+  revoked BOOLEAN,
   FOREIGN KEY (user_id) REFERENCES users (id),
   FOREIGN KEY (application_id) REFERENCES applications (id)
 );
 
--- Create the refresh_tokens table
-CREATE TABLE refresh_tokens (
-  id INTEGER PRIMARY KEY,
+CREATE TABLE IF NOT EXISTS access_tokens (
+  id INTEGER PRIMARY KEY AUTOINCREMENT,
+  created_at DATETIME DEFAULT CURRENT_TIMESTAMP,
   token TEXT UNIQUE,
   user_id INTEGER,
   application_id INTEGER,
-  created_at DATETIME DEFAULT CURRENT_TIMESTAMP,
-  updated_at DATETIME DEFAULT CURRENT_TIMESTAMP,
+  expires_at DATETIME NOT NULL,
+  revoked BOOLEAN,
   FOREIGN KEY (user_id) REFERENCES users (id),
   FOREIGN KEY (application_id) REFERENCES applications (id)
 );
 
--- Permissions table
-CREATE TABLE permissions (
+CREATE TABLE IF NOT EXISTS permissions (
   id INTEGER PRIMARY KEY AUTOINCREMENT,
-  name TEXT NOT NULL,
-  description TEXT,
   created_at DATETIME DEFAULT CURRENT_TIMESTAMP,
-  updated_at DATETIME DEFAULT CURRENT_TIMESTAMP
+  updated_at DATETIME DEFAULT CURRENT_TIMESTAMP,
+  name TEXT NOT NULL,
+  description TEXT
 );
 
--- Providers table
-CREATE TABLE providers (
+CREATE TABLE IF NOT EXISTS providers (
   id INTEGER PRIMARY KEY AUTOINCREMENT,
+  created_at DATETIME DEFAULT CURRENT_TIMESTAMP,
+  updated_at DATETIME DEFAULT CURRENT_TIMESTAMP,
   name TEXT NOT NULL,
   description TEXT,
-  data JSON,
-  created_at DATETIME DEFAULT CURRENT_TIMESTAMP,
-  updated_at DATETIME DEFAULT CURRENT_TIMESTAMP
+  data JSON
 );
 
-CREATE TABLE user_roles (
+CREATE TABLE IF NOT EXISTS application_providers (
+  application_id INTEGER,
+  provider_id INTEGER,
+  FOREIGN KEY (application_id) REFERENCES applications(id),
+  FOREIGN KEY (provider_id) REFERENCES providers(id)
+);
+
+CREATE TABLE IF NOT EXISTS user_roles (
   user_id INTEGER NOT NULL,
   role_id INTEGER NOT NULL,
   FOREIGN KEY (user_id) REFERENCES users(id),
   FOREIGN KEY (role_id) REFERENCES roles(id)
 );
 
-CREATE TABLE user_permissions (
+CREATE TABLE IF NOT EXISTS user_permissions (
   user_id INTEGER NOT NULL,
   permission_id INTEGER NOT NULL,
   FOREIGN KEY (user_id) REFERENCES users(id),
   FOREIGN KEY (permission_id) REFERENCES permissions(id)
 );
 
-CREATE TABLE providers_credentials (
-  id INTEGER PRIMARY KEY,
+CREATE TABLE IF NOT EXISTS user_sessions (
+  user_id INTEGER NOT NULL,
+  session_id INTEGER NOT NULL,
+  FOREIGN KEY (user_id) REFERENCES users(id),
+  FOREIGN KEY (session_id) REFERENCES sessions(id)
+);
+
+CREATE TABLE IF NOT EXISTS providers_credentials (
+  id INTEGER PRIMARY KEY AUTOINCREMENT,
+  created_at DATETIME DEFAULT CURRENT_TIMESTAMP,
+  updated_at DATETIME DEFAULT CURRENT_TIMESTAMP,
   provider_id INTEGER NOT NULL,
   key TEXT NOT NULL,
-  secret TEXT NOT NULL,
-  created_at DATETIME DEFAULT CURRENT_TIMESTAMP,
-  updated_at DATETIME DEFAULT CURRENT_TIMESTAMP
+  secret TEXT NOT NULL
 );
 
 -- Insert a new application
-INSERT INTO applications (name, redirect_uri, identifier)
+INSERT INTO applications (name, redirect_uri, client_id)
 VALUES ('My Application', 'http://example.com/redirect', '0x1aec66176882a6ccbc004bcbfc7abdbbe458d90c40');
 
 -- Insert a new provider
@@ -122,4 +169,4 @@ VALUES ('John Doe', 'johndoe@example.com', '1234567890', 'password123', 1, 1);
 
 UPDATE applications
 SET owner_id = 1
-WHERE identifier = '0x1aec66176882a6ccbc004bcbfc7abdbbe458d90c40';
+WHERE client_id = '0x1aec66176882a6ccbc004bcbfc7abdbbe458d90c40';

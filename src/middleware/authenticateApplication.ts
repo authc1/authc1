@@ -8,9 +8,8 @@ async function checkIfApplicationExists(c: Context, applicationId: string): Prom
 
   try {
     const total = await c.env.AUTHC1.prepare(
-      "SELECT COUNT(*) as count FROM applications WHERE id = ?"
+      "SELECT COUNT(*) as count FROM applications WHERE client_id = ?"
     ).bind(applicationId).first('count')
-
     if (total) {
       return true
     }
