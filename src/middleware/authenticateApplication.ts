@@ -1,20 +1,27 @@
 import { Context, MiddlewareHandler, Next } from "hono"
 import { setUnauthorizedResponse } from "./jwt"
 
-async function checkIfApplicationExists(c: Context, applicationId: string): Promise<boolean> {
-  if (!applicationId) {
-    return false
-  }
+interface ApplicationInfo {
+  applicationId: string | null;
+  name: string | null;
+}
 
+async function checkIfApplicationExists(c: Context, applicationId: string): Promise<ApplicationInfo> {
   try {
-    const total = await c.env.AUTHC1.prepare(
-      "SELECT COUNT(*) as count FROM applications WHERE client_id = ?"
-    ).bind(applicationId).first('count')
-    if (total) {
-      return true
+    const application = await c.env.AUTHC1.prepare(
+      "SELECT name FROM applications WHERE id = ?"
+    ).bind(applicationId).first()
+    if (application) {
+      return {
+        applicationId: application.id,
+        name: application.name,
+      }
+    } else {
+      return {
+        applicationId: null,
+        name: null,
+      }
     }
-
-    return false
   } catch (err) {
     throw err
   }
@@ -23,10 +30,12 @@ async function checkIfApplicationExists(c: Context, applicationId: string): Prom
 export function authenticateApplication(): MiddlewareHandler {
   return async (c: Context, next: Next) => {
     const applicationId = c.req.headers.get('X-Authc1-Id') as string
-    console.log("applicationId", applicationId)
-    if (!await checkIfApplicationExists(c, applicationId)) {
+    const applicationInfo = await checkIfApplicationExists(c, applicationId)
+    if (!applicationInfo.applicationId) {
       return setUnauthorizedResponse(c)
     }
+    c.set("applicationId", applicationInfo.applicationId)
+    c.set("applicationName", applicationInfo.name)
     await next()
   }
 }

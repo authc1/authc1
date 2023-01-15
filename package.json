@@ -19,6 +19,7 @@
   "description": "",
   "main": "src/index.ts",
   "dependencies": {
+    "@aws-sdk/client-ses": "^3.245.0",
     "@tsndr/cloudflare-worker-jwt": "^2.1.4",
     "hono": "^2.6.1"
   }

@@ -7,7 +7,7 @@ function setJwtDataToContext(c: Context, payload: any, key = idContextKey) {
     return c.set(key, payload);
 }
 
-export function setUnauthorizedResponse(ctx: Context) {
+export function setUnauthorizedResponse(ctx: Context): Response {
     return new Response('Unauthorized', {
         status: 401,
         headers: {
@@ -20,7 +20,7 @@ export async function sign(
     payload: any,
     secret: string,
     algorithm: string = 'HS256'
-) {
+): Promise<string>  {
     const token = await jsonwebtoken.sign(payload, secret, { algorithm });
     return token;
 }
@@ -39,7 +39,7 @@ export async function verify(
     return payload;
 }
 
-export function getJwtDataToContext(c: Context, key = idContextKey) {
+export function getJwtDataToContext(c: Context, key = idContextKey): any {
     const data = c.get(key);
     if (!data)  {
         return null;
