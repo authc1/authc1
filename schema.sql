@@ -1,14 +1,10 @@
 DROP TABLE IF EXISTS users;
-DROP TABLE IF EXISTS user_providers;
 DROP TABLE IF EXISTS roles;
 DROP TABLE IF EXISTS applications;
-DROP TABLE IF EXISTS refresh_tokens;
-DROP TABLE IF EXISTS access_tokens;
 DROP TABLE IF EXISTS permissions;
 DROP TABLE IF EXISTS providers;
 DROP TABLE IF EXISTS user_roles;
 DROP TABLE IF EXISTS user_permissions;
-DROP TABLE IF EXISTS providers_credentials;
 
 CREATE TABLE IF NOT EXISTS users (
   id TEXT PRIMARY KEY,
@@ -17,11 +13,11 @@ CREATE TABLE IF NOT EXISTS users (
   name TEXT,
   nickname TEXT,
   avatar_url TEXT DEFAULT '' NOT NULL,
-  email TEXT UNIQUE,
-  phone TEXT UNIQUE,
+  email TEXT,
+  phone TEXT,
   password TEXT,
-  salt BLOB,
-  provider_id INTEGER,
+  provider_id INTEGER NOT NULL,
+  provider_user_id text,
   application_id TEXT,
   last_login DATETIME,
   status TEXT,
@@ -30,18 +26,19 @@ CREATE TABLE IF NOT EXISTS users (
   email_verified BOOLEAN DEFAULT false NOT NULL,
   phone_number_verified BOOLEAN DEFAULT false NOT NULL,
   FOREIGN KEY (provider_id) REFERENCES providers(id),
-  FOREIGN KEY (application_id) REFERENCES applications(id)
+  FOREIGN KEY (application_id) REFERENCES applications(id),
+  UNIQUE (email, application_id),
+  UNIQUE (phone, application_id)
 );
 
-CREATE TABLE IF NOT EXISTS user_providers (
-  id INTEGER PRIMARY KEY AUTOINCREMENT,
+CREATE TABLE IF NOT EXISTS applications (
+  id TEXT PRIMARY KEY,
   created_at DATETIME DEFAULT CURRENT_TIMESTAMP,
   updated_at DATETIME DEFAULT CURRENT_TIMESTAMP,
-  user_id TEXT NOT NULL,
-  provider_id text NOT NULL,
-  provider_user_id text NOT NULL,
-  UNIQUE (user_id, provider_id),
-  UNIQUE (provider_id, provider_user_id)
+  name TEXT NOT NULL,
+  logo TEXT,
+  user_id TEXT,
+  FOREIGN KEY (user_id) REFERENCES users(id)
 );
 
 CREATE TABLE IF NOT EXISTS roles (
@@ -50,33 +47,23 @@ CREATE TABLE IF NOT EXISTS roles (
   name TEXT UNIQUE
 );
 
-CREATE TABLE IF NOT EXISTS applications (
-  id TEXT PRIMARY KEY,
-  created_at DATETIME DEFAULT CURRENT_TIMESTAMP,
-  updated_at DATETIME DEFAULT CURRENT_TIMESTAMP,
-  name TEXT NOT NULL,
-  owner_id INTEGER,
-  FOREIGN KEY (owner_id) REFERENCES users(id)
-);
-
 CREATE TABLE IF NOT EXISTS tokens (
-  id INTEGER PRIMARY KEY AUTOINCREMENT,
+  id TEXT PRIMARY KEY,
   created_at DATETIME DEFAULT CURRENT_TIMESTAMP,
   user_id TEXT NOT NULL,
   application_id TEXT NOT NULL,
-  session_id INTEGER,
-  id_token TEXT,
+  session_id TEXT,
   access_token TEXT,
   refresh_token TEXT,
-  access_token_expiration DATETIME NOT NULL,
-  refresh_token_expiration DATETIME NOT NULL,
+  access_token_expiration DATETIME,
+  refresh_token_expiration DATETIME,
   FOREIGN KEY (user_id) REFERENCES users(id),
   FOREIGN KEY (application_id) REFERENCES applications(id),
   FOREIGN KEY (session_id) REFERENCES sessions(id)
 );
 
 CREATE TABLE sessions (
-  id INTEGER PRIMARY KEY AUTOINCREMENT,
+  id TEXT PRIMARY KEY,
   created_at DATETIME DEFAULT CURRENT_TIMESTAMP,
   user_id TEXT NOT NULL,
   application_id TEXT,
@@ -89,7 +76,7 @@ CREATE TABLE sessions (
   expiration_timestamp DATETIME,
   email_verify_code TEXT,
   phone_verify_code TEXT,
-  FOREIGN KEY (user_id) REFERENCES users(id)
+  FOREIGN KEY (user_id) REFERENCES users(id),
   FOREIGN KEY (application_id) REFERENCES applications (id)
 );
 
@@ -106,15 +93,7 @@ CREATE TABLE IF NOT EXISTS providers (
   created_at DATETIME DEFAULT CURRENT_TIMESTAMP,
   updated_at DATETIME DEFAULT CURRENT_TIMESTAMP,
   name TEXT NOT NULL,
-  description TEXT,
-  data JSON
-);
-
-CREATE TABLE IF NOT EXISTS application_providers (
-  application_id TEXT,
-  provider_id INTEGER,
-  FOREIGN KEY (application_id) REFERENCES applications(id),
-  FOREIGN KEY (provider_id) REFERENCES providers(id)
+  description TEXT
 );
 
 CREATE TABLE IF NOT EXISTS user_roles (
@@ -138,39 +117,20 @@ CREATE TABLE IF NOT EXISTS user_sessions (
   FOREIGN KEY (session_id) REFERENCES sessions(id)
 );
 
-CREATE TABLE IF NOT EXISTS providers_credentials (
-  id INTEGER PRIMARY KEY AUTOINCREMENT,
-  created_at DATETIME DEFAULT CURRENT_TIMESTAMP,
-  updated_at DATETIME DEFAULT CURRENT_TIMESTAMP,
-  provider_id INTEGER NOT NULL,
-  key TEXT NOT NULL,
-  secret TEXT NOT NULL
-);
-
 CREATE TABLE IF NOT EXISTS application_settings (
-  id INTEGER PRIMARY KEY AUTOINCREMENT,
-  application_id TEXT NOT NULL,
+  application_id TEXT PRIMARY KEY,
   created_at DATETIME DEFAULT CURRENT_TIMESTAMP,
   updated_at DATETIME DEFAULT CURRENT_TIMESTAMP,
   expires_in INTEGER DEFAULT 86400,
   secret TEXT,
-  algorithm TEXT,
-  redirect_uri TEXT NOT NULL,
-  password_strength_requirement VARCHAR(255),
-  two_factor_authentication BOOLEAN,
+  algorithm TEXT DEFAULT 'HS256',
+  redirect_uri TEXT,
+  two_factor_authentication BOOLEAN DEFAULT false,
   session_expiration_time INTEGER,
   token_expiration_time INTEGER,
-  password_reset_enabled BOOLEAN,
-  account_deletion_enabled BOOLEAN,
-  failed_login_attempts INTEGER,
-  sender_email TEXT,
-  email_template_body TEXT,
-  email_template_subject TEXT,
-  email_verification_enabled BOOLEAN,
-  email_verification_method TEXT DEFAULT 'code',
-  text_template_body TEXT,
-  phone_verification_enabled BOOLEAN,
-  FOREIGN KEY (application_id) REFERENCES applications(id)
+  account_deletion_enabled BOOLEAN DEFAULT true,
+  failed_login_attempts INTEGER DEFAULT 5,
+  UNIQUE (application_id)
 );
 
 CREATE TABLE IF NOT EXISTS application_ip_whitelist (
@@ -182,29 +142,22 @@ CREATE TABLE IF NOT EXISTS application_ip_whitelist (
   FOREIGN KEY (application_id) REFERENCES applications(id)
 );
 
-CREATE TABLE IF NOT EXISTS application_settings_providers (
-  application_setting_id INTEGER NOT NULL,
-  provider_id INTEGER NOT NULL,
-  FOREIGN KEY (application_setting_id) REFERENCES application_settings(id),
-  FOREIGN KEY (provider_id) REFERENCES providers(id),
-  PRIMARY KEY (application_setting_id, provider_id)
-);
-
 CREATE INDEX idx_sessions_user_id ON sessions (user_id);
 CREATE INDEX idx_sessions_session_id ON sessions (session_id);
 
 -- Insert a new application
-INSERT INTO applications (id, name, redirect_uri)
-VALUES ('0xe31b8c39aeb08cf49e97836f17fa2e673bfb24d9', 'My Application', 'http://example.com/redirect');
+INSERT INTO applications (id, name)
+VALUES ('0xa5b73c5a97b240bda6eaa7edfd33cff0', 'Authc1');
 
--- Insert a new provider
-INSERT INTO providers (name, description, created_at, updated_at)
-VALUES ('Email', 'Email login with password.', CURRENT_TIMESTAMP, CURRENT_TIMESTAMP);
+INSERT INTO application_settings (application_id, secret)
+VALUES ('0xa5b73c5a97b240bda6eaa7edfd33cff0', '0e09089d2fbe4179bad7ae085b4c8fdc1bf2f9318c234b809aa86e83fad5a1f7');
 
--- Insert a new user, using the values stored in the local variables
-INSERT INTO users (id, name, email, phone, password, provider_id, application_id)
-VALUES ('0x1c73c9a44b3023134f7eac7ab30e9ab5a4615a76', 'John Doe', 'johndoe@example.com', '1234567890', 'password123', 1, '0xe31b8c39aeb08cf49e97836f17fa2e673bfb24d9');
+INSERT INTO providers (id, name, description, created_at, updated_at)
+VALUES (1, 'Email', 'Email login with password.', CURRENT_TIMESTAMP, CURRENT_TIMESTAMP);
+
+INSERT INTO users (id, name, email, password, provider_id, application_id)
+VALUES ('0x21e312fde025485db1e52e1b20899928', 'Subhendu Kundu', 'subhendukundu14@gmail.com', 'Admin@123', 1, '0xa5b73c5a97b240bda6eaa7edfd33cff0');
 
 UPDATE applications
-SET owner_id = '0x1c73c9a44b3023134f7eac7ab30e9ab5a4615a76'
-WHERE id = '0xe31b8c39aeb08cf49e97836f17fa2e673bfb24d9';
+SET user_id = '0x21e312fde025485db1e52e1b20899928'
+WHERE id = '0xa5b73c5a97b240bda6eaa7edfd33cff0';

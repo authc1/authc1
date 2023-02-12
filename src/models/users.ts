@@ -8,7 +8,6 @@ export interface IUsers {
     email: string;
     phone: string;
     password: string;
-    salt: Blob;
     provider_id: number;
     application_id: string;
     last_login: Date;

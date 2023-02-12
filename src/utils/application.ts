@@ -1,6 +1,9 @@
 import { Context } from "hono";
+import { ProviderSettings } from "../models/provider";
+import { ApplicationNotFoundError } from "./errors";
+import { getProviderDefaultSettings } from "./kv";
 
-interface IApplicationSettings {
+export interface IApplicationSettings {
     id: number;
     application_id: string;
     created_at: Date;
@@ -8,33 +11,42 @@ interface IApplicationSettings {
     expires_in: number;
     secret: string;
     algorithm: string;
-    password_strength_requirement: string;
     two_factor_authentication: boolean;
     session_expiration_time: number;
     token_expiration_time: number;
-    password_reset_enabled: boolean;
     account_deletion_enabled: boolean;
     failed_login_attempts: number;
-    sender_email: string;
-    email_template_body: string;
-    email_template_subject: string;
-    email_verification_enabled: boolean;
-    email_verification_method: string;
-    text_template_body: string;
-    phone_verification_enabled: boolean;
 }
 
 export async function getApplicationSettings(c: Context, applicationId: string, columns: string[]): Promise<IApplicationSettings> {
     try {
         const columnsString = columns.join(', ');
+        console.log(applicationId);
         const { results } = await c.env.AUTHC1.prepare(
             `SELECT ${columnsString} FROM application_settings WHERE application_id = ?`
         ).bind(applicationId).all()
+        console.log(results);
         if (results?.length) {
             return results[0];
         }
-        throw new Error('Application not found')
+        throw new ApplicationNotFoundError('Application not found');
     } catch (err) {
         throw err;
     }
 }
+
+export async function getApplicationProviderSettings(
+    c: Context,
+    applicationId: string
+  ): Promise<ProviderSettings> {
+    try {
+      console.log(applicationId);
+      const data = await getProviderDefaultSettings(c, applicationId);
+      if(!data) {
+          throw new ApplicationNotFoundError("Application not found");
+      }
+      return data;
+    } catch (err) {
+      throw err;
+    }
+  }

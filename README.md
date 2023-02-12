@@ -8,3 +8,7 @@ Support for multiple authentication methods (e.g. username/password, single sign
 Role-based access control
 User management capabilities (e.g. password reset, account lockout)
 Easy integration with existing applications
+
+TODO:
+1. Password complexcity and check
+2. hash passwords to durable objects or KV

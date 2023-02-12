@@ -1,23 +1,22 @@
-import { Context, Validator } from "hono";
-import { IUsers } from "../../models/users";
-import { getApplicationProviderSettings } from "../../utils/application";
-import { handleSESError, sendEmail } from "../../utils/email";
-import {
-  emailVerificationDisabled,
-  handleError,
-} from "../../utils/error-responses";
-import { updateSession } from "../../utils/session";
-import { generateEmailVerificationCode } from "../../utils/string";
+import { Context } from "hono";
+import { D1QB } from "workers-qb";
+import { z } from "zod";
 
-export interface ISendVerificationEmailParams {
-  email: string;
-  emailVerificationMethod: string;
-  emailTemplateBody: string;
-  emailTemplateSubject: string;
-  senderEmail: string;
-  emailVerificationCode: string;
-  sessionId: string;
-}
+import {
+  userNotFound,
+  getUserError,
+  handleError,
+  emailVerificationDisabled,
+} from "../../../../utils/error-responses";
+import {
+  handleSuccess,
+  SuccessResponse,
+} from "../../../../utils/success-responses";
+import { sendEmail } from "../../../../utils/email";
+import { ISendVerificationEmailParams } from "../../../verify/email";
+import { IUsers } from "../../../../models/users";
+import { generateEmailVerificationCode } from "../../../../utils/string";
+import { updateSession } from "../../../../utils/session";
 
 const sendVerificationEmail = async (
   c: Context,
@@ -41,12 +40,21 @@ const sendVerificationEmail = async (
   return sendEmail(c, email, subject, body, senderEmail);
 };
 
-const emailValidationController = async (c: Context) => {
+const sendResetCodeController = async (c: Context) => {
   try {
-    const applicationId = c.get("applicationId") as string;
+    const { email } = await c.req.valid();
+    const db = new D1QB(c.env.AUTHC1);
     const user: IUsers = c.get("user");
     const sessionId = c.get("sessionId") as string;
-    const { email } = user;
+
+    const applicationSettings = await db.fetchOne({
+      fields: "*",
+      tableName: "application_settings",
+    });
+
+    if (!applicationSettings?.results) {
+      return handleError(getUserError, c);
+    }
 
     const {
       email_verification_enabled: emailVerificationEnabled,
@@ -54,10 +62,12 @@ const emailValidationController = async (c: Context) => {
       email_template_body: emailTemplateBody,
       email_template_subject: emailTemplateSubject,
       sender_email: senderEmail,
-    } = await getApplicationProviderSettings(c, applicationId);
+    } = applicationSettings.results as any;
+
     if (!emailVerificationEnabled) {
       return handleError(emailVerificationDisabled, c);
     }
+
     const emailVerificationCode = generateEmailVerificationCode();
 
     await Promise.all([
@@ -76,13 +86,16 @@ const emailValidationController = async (c: Context) => {
       }),
     ]);
 
-    return c.json({
-      email,
-    });
+    const response: SuccessResponse = {
+      message: "Password reset code sent successfully",
+      data: {
+        email,
+      },
+    };
+    return handleSuccess(c, response);
   } catch (err) {
-    console.log(err);
-    return handleSESError(c, err);
+    return handleError(getUserError, c, err);
   }
 };
 
-export default emailValidationController;
+export default sendResetCodeController;
