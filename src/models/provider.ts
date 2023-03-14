@@ -7,6 +7,17 @@ export interface Provider {
   updated_at: Date;
 }
 
+export interface OauthProvider {
+  provider_enabled: boolean;
+  client_id: string;
+  client_secret: string;
+  redirect_uri: string;
+  scope: string;
+  team_id?: string;
+  key_id?: string;
+  private_key?: string;
+}
+
 export interface ProviderSettings {
   email_provider_enabled: boolean;
   sender_email: string;

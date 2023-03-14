@@ -1,4 +1,6 @@
 import { Handler, Hono } from "hono";
+import { zValidator } from "@hono/zod-validator";
+import { applicationActivitiesController } from "../controllers/applications/activities/get";
 import createApplicationController, {
   schema,
 } from "../controllers/applications/create";
@@ -15,31 +17,32 @@ import updateApplicationController, {
 } from "../controllers/applications/update";
 import { validateAccessToken } from "../middleware/validateAccessToken";
 
-import { zValidtor } from "../utils/validator";
-
 const applicationsRoutes = new Hono();
 
 applicationsRoutes.use("*", validateAccessToken());
 
-applicationsRoutes.post("/", zValidtor(schema), createApplicationController);
+applicationsRoutes.post(
+  "/",
+  zValidator("json", schema),
+  createApplicationController
+);
 applicationsRoutes.get("/", listApplicationController);
 applicationsRoutes.get("/:id", getApplicationByIdController);
 
 applicationsRoutes.post(
   "/:id",
-  zValidtor(updateApplicationSchema),
+  zValidator("json", updateApplicationSchema),
   updateApplicationController
 );
 
 applicationsRoutes.post(
   "/:id/providers",
-  zValidtor(updateApplicationProvidersSchema),
+  zValidator("json", updateApplicationProvidersSchema),
   updateApplicationProviderController
 );
 
-applicationsRoutes.get(
-  "/:id/providers",
-  getApplicationProvidersController
-);
+applicationsRoutes.get("/:id/providers", getApplicationProvidersController);
+
+applicationsRoutes.get("/:id/activities", applicationActivitiesController);
 
 export { applicationsRoutes };

@@ -17,7 +17,7 @@ type UpdateUserData = z.infer<typeof updateUserSchema>;
 const updateUserController = async (c: Context) => {
   try {
     const user: JwtPayloadToUser = c.get("user");
-    const data: UpdateUserData = await c.req.valid();
+    const data: UpdateUserData = await c.req.valid("json");
     const db = new D1QB(c.env.AUTHC1);
 
     const updatedUser = await db.update({

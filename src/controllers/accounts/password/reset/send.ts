@@ -39,7 +39,7 @@ const sendVerificationEmail = async (
   const body = emailTemplateBody.replace("{{code}}", code);
   return sendEmail(c, email, subject, body, senderEmail);
 };
-
+// TODO: Immediate
 const sendResetCodeController = async (c: Context) => {
   try {
     const { email } = await c.req.valid();

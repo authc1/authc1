@@ -15,6 +15,7 @@ export async function createHash(password: string): Promise<HashObject> {
   const hexString = [...new Uint8Array(digest)]
     .map((b) => b.toString(16).padStart(2, "0"))
     .join("");
+  console.log(salt.toString(), hexString);
   return { salt: salt.toString(), hash: hexString };
 }
 

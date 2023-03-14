@@ -1,6 +1,9 @@
 import { Context } from "hono";
+import { D1QB } from "workers-qb";
+import { userSchema, UserSchema } from "../controllers/accounts/me";
 import { ITokens } from "../models/tokens";
 import { IUsers } from "../models/users";
+import { ErrorResponse, handleError, userNotFound } from "./error-responses";
 
 export const getUserByEmail = async (
   c: Context,
@@ -21,6 +24,66 @@ export const getUserByEmail = async (
     }
 
     return null;
+  } catch (err: any) {
+    throw err;
+  }
+};
+
+export const getUserByEmailWithProviderId = async (
+  c: Context,
+  email: string,
+  applicationId: string,
+  providerId: number,
+  select: string[]
+): Promise<UserSchema | null> => {
+  try {
+    const db = new D1QB(c.env.AUTHC1);
+    const userData = await db.fetchOne({
+      tableName: "users",
+      fields: select,
+      where: {
+        conditions:
+          "users.email = ?1 AND users.provider_id = ?2 AND application_id = ?3",
+        params: [email, providerId, applicationId],
+      },
+    });
+
+    if (!userData?.results) {
+      return null;
+    }
+
+    const data: UserSchema = userSchema.parse(userData.results);
+
+    return data;
+  } catch (err: any) {
+    throw err;
+  }
+};
+
+export const getUserById = async (
+  c: Context,
+  id: string,
+  applicationId: string,
+  select: string[]
+): Promise<UserSchema | Response> => {
+  try {
+    const db = new D1QB(c.env.AUTHC1);
+    const userData = await db.fetchOne({
+      tableName: "users",
+      fields: select,
+      where: {
+        conditions: "users.id = ?1 AND application_id = ?2",
+        params: [id, applicationId],
+      },
+    });
+
+    if (!userData?.results) {
+      return handleError(userNotFound, c);
+    }
+
+    const data: UserSchema = userSchema.parse(userData.results);
+
+    return data;
   } catch (err: any) {
     throw err;
   }
@@ -88,6 +151,37 @@ export const updateUser = async (
       .bind(...values, userId)
       .run();
   } catch (err) {
+    throw err;
+  }
+};
+
+export const getUserByIdAndProviderUserId = async (
+  c: Context,
+  email: string,
+  providerUserId: string,
+  applicationId: string,
+  select: string[]
+): Promise<UserSchema | null> => {
+  try {
+    const db = new D1QB(c.env.AUTHC1);
+    const userData = await db.fetchOne({
+      tableName: "users",
+      fields: select,
+      where: {
+        conditions:
+          "users.email = ?1 AND users.provider_user_id = ?2 AND application_id = ?3",
+        params: [email, providerUserId, applicationId],
+      },
+    });
+
+    if (!userData?.results) {
+      return null;
+    }
+
+    const data: UserSchema = userSchema.parse(userData.results);
+
+    return data;
+  } catch (err: any) {
     throw err;
   }
 };

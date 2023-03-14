@@ -62,6 +62,14 @@ export const emailNotVerified: ErrorResponse = {
   status: 403,
 };
 
+export const userEmailAlreadyVerified: ErrorResponse = {
+  error: {
+    code: "EMAIL_ALREADY_VERIFIED",
+    message: "This email is already verified.",
+  },
+  status: 403,
+};
+
 export const invalidCredentials: ErrorResponse = {
   error: {
     code: "INVALID_CREDENTIALS",
@@ -269,4 +277,53 @@ export const unauthorizedError: ErrorResponse = {
     message: "Invalid credentials provided.",
   },
   status: 401,
+};
+
+export const expiredTokenError: ErrorResponse = {
+  error: {
+    code: "TOKEN_EXPIRED",
+    message:
+      "Expired access token provided. Please log in again to get a new access token.",
+  },
+  status: 401,
+};
+
+export const unauthorizedDataRequestError: ErrorResponse = {
+  error: {
+    code: "UNAUTHORIZED_DATA_REQUEST",
+    message: "You are not authorized to access this Application.",
+  },
+  status: 401,
+};
+
+export const clientIdNotProvidedError: ErrorResponse = {
+  error: {
+    code: "CLIENT_ID_NOT_PROVIDED",
+    message: "Provider's client ID is not provided.",
+  },
+  status: 500,
+};
+
+export const redirectUrlNotProvidedError: ErrorResponse = {
+  error: {
+    code: "REDIRECT_URL_NOT_PROVIDED",
+    message: "Provider Option Redirect Url is not provided.",
+  },
+  status: 500,
+};
+
+export const redirectFailedError: ErrorResponse = {
+  error: {
+    code: "REDIRECT_FAILED",
+    message: "Failed to redirect for authentication.",
+  },
+  status: 500,
+};
+
+export const providerNotEnabledError: ErrorResponse = {
+  error: {
+    code: "PROVIDER_NOT_ENABLED",
+    message: "The provider is not enabled for this application.",
+  },
+  status: 500,
 };

@@ -1,6 +1,6 @@
 import jsonwebtoken from "@tsndr/cloudflare-worker-jwt";
 import { Context, Next } from "hono";
-import { handleError, unauthorizedError } from "../utils/error-responses";
+import { handleError, unauthorizedError, expiredTokenError } from "../utils/error-responses";
 
 const idContextKey = "jwt-token-cloudflare-id-token-key";
 
@@ -34,17 +34,24 @@ export async function sign(
 }
 
 export async function verify(
-  ctx: Context,
+  c: Context,
   token: string,
   secret: string,
   algorithm: string = "HS256"
-): Promise<VerifyPayload | null> {
-  const isValid = await jsonwebtoken.verify(token, secret, { algorithm });
-  if (!isValid) {
-    return null;
+): Promise<VerifyPayload | Response> {
+  try {
+    await jsonwebtoken.verify(token, secret, {
+      algorithm,
+      throwError: true,
+    });
+    const { payload } = jsonwebtoken.decode(token);
+    return payload as VerifyPayload;
+  } catch (e) {
+    if(e === 'EXPIRED') {
+      return handleError(expiredTokenError, c);
+    }
+    return setUnauthorizedResponse(c);
   }
-  const { payload } = jsonwebtoken.decode(token);
-  return payload as VerifyPayload;
 }
 
 export function getJwtDataToContext(c: Context, key = idContextKey): any {
@@ -66,20 +73,17 @@ export function jwt(options: any) {
     const authorization = ctx.req.headers.get(
       authorizationHeaderKey || "Authorization"
     );
-    console.log("authorization", authorization);
 
     if (!authorization) {
       return setUnauthorizedResponse(ctx);
     }
     const token: string = authorization.replace(/Bearer\s+/i, "");
-    console.log("token", token);
     try {
-      const payload = verify(ctx, token, secret, alg);
+      const payload = await verify(ctx, token, secret, alg);
       if (contextKey) {
         setJwtDataToContext(ctx, payload, contextKey);
       }
     } catch (e: any) {
-      console.log(e);
       return setUnauthorizedResponse(ctx);
     }
     await next();

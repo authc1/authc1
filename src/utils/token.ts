@@ -1,4 +1,5 @@
 import { Context } from "hono";
+import { D1QB, Raw } from "workers-qb";
 import { sign } from "../middleware/jwt";
 import { generateRandomID, generateUniqueIdWithPrefix } from "./string";
 
@@ -27,7 +28,7 @@ export const createAndSaveTokens = async (c: Context, payload: Payload) => {
     algorithm,
   } = payload;
   try {
-    // TODO: Based on application settings
+    const db = new D1QB(c.env.AUTHC1);
     const accessToken = await sign(
       {
         iss: `${c.env.VERIFY_EMAIL_ENDPOINT}/${applicationId}`,
@@ -46,19 +47,17 @@ export const createAndSaveTokens = async (c: Context, payload: Payload) => {
 
     const refreshToken = `0x${generateRandomID()}${generateRandomID()}`;
 
-    await c.env.AUTHC1.prepare(
-      `INSERT INTO tokens (id, user_id, application_id, session_id, access_token, refresh_token, created_at)
-            VALUES (?, ?, ?, ?, ?, ?, CURRENT_TIMESTAMP)`
-    )
-      .bind(
-        generateUniqueIdWithPrefix(),
-        id,
-        applicationId,
-        sessionId,
-        accessToken,
-        refreshToken
-      )
-      .run();
+    await db.insert({
+      tableName: "tokens",
+      data: {
+        id: generateUniqueIdWithPrefix(),
+        user_id: id,
+        application_id: applicationId,
+        session_id: sessionId,
+        access_token: accessToken,
+        refresh_token: refreshToken,
+      },
+    });
 
     return {
       accessToken,

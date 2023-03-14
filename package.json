@@ -13,15 +13,17 @@
   },
   "private": true,
   "scripts": {
-    "start": "wrangler dev --local --persist",
+    "start": "npx wrangler dev --local --persist",
     "deploy": "wrangler publish"
   },
   "description": "",
   "main": "src/index.ts",
   "dependencies": {
     "@aws-sdk/client-ses": "^3.245.0",
+    "@hono/zod-validator": "^0.0.6",
     "@tsndr/cloudflare-worker-jwt": "^2.1.4",
-    "hono": "^2.6.1",
+    "hono": "3.0.1",
+    "worker-auth-providers": "^0.0.10-beta11",
     "workers-qb": "^0.1.5",
     "zod": "^3.20.2"
   }

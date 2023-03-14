@@ -1,5 +1,4 @@
 import { Hono } from 'hono'
-import { validator } from 'hono/validator'
 
 import emailValidationController from '../controllers/verify/email'
 import { validateAccessToken } from '../middleware/validateAccessToken'

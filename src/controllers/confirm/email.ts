@@ -1,6 +1,7 @@
-import { Context, Validator } from "hono";
+import { Context } from "hono";
 import { html } from "hono/html";
 import { D1QB, Raw } from "workers-qb";
+import { z } from "zod";
 import {
   expiredOrInvalidCode,
   expiredOrInvalidLink,
@@ -10,32 +11,30 @@ import {
 import { getSessionById } from "../../utils/session";
 import { getUserBySessionId, updateUser } from "../../utils/user";
 
-type ConfirmEmailByCodeRequest = {
-  code: string;
-};
+export const confirmEmailByCodeSchema = z.object({
+  code: z.string(),
+});
 
-export function confirmEmailByCodeValidator(v: Validator) {
-  return {
-    code: v.json("code").isOptional(),
-  };
-}
+export type ConfirmEmailByCodeRequest = z.infer<
+  typeof confirmEmailByCodeSchema
+>;
 
-export function confirmEmailByLinkValidator(v: Validator) {
-  return {
-    code: v.query("code").isRequired().message("code is required!"),
-    session_id: v
-      .query("session_id")
-      .isRequired()
-      .message("session_id is required!"),
-  };
-}
+export const confirmEmailByLinkSchema = z.object({
+  code: z.string(),
+  session_id: z.string(),
+});
+
+export type ConfirmEmailByLinkRequest = z.infer<
+  typeof confirmEmailByLinkSchema
+>;
 
 export const confirmEmailControllerByCode = async (c: Context) => {
-  const body = await c.req.json<ConfirmEmailByCodeRequest>();
+  const body: ConfirmEmailByCodeRequest = await c.req.valid("json");
   const { code } = body;
   try {
     const db = new D1QB(c.env.AUTHC1);
     const sessionId = c.get("sessionId") as string;
+    const applicationId = c.get("applicationId") as string;
     const user = c.get("user");
     const session = await getSessionById(c, sessionId, [
       "expiration_timestamp",
@@ -58,6 +57,13 @@ export const confirmEmailControllerByCode = async (c: Context) => {
       where: { conditions: "id = ?1", params: [user?.id] },
     });
 
+    await c.env.AUTHC1_ACTIVITY_QUEUE.send({
+      acitivity: "EmailConfirmedByCode",
+      id: user?.id,
+      applicationId,
+      created_at: Date.now(),
+    });
+
     return c.json({
       local_id: user.id,
       email: user.email,
@@ -69,8 +75,9 @@ export const confirmEmailControllerByCode = async (c: Context) => {
 };
 
 export const confirmEmailControllerByLink = async (c: Context) => {
-  const code = await c.req.query("code");
-  const sessionId = await c.req.query("session_id");
+  const { code, session_id: sessionId }: ConfirmEmailByLinkRequest =
+    await c.req.valid("query");
+  const applicationId = c.get("applicationId") as string;
   const db = new D1QB(c.env.AUTHC1);
   try {
     const session = await getSessionById(c, sessionId, [
@@ -117,6 +124,13 @@ export const confirmEmailControllerByLink = async (c: Context) => {
         confirmed_at: new Raw("CURRENT_TIMESTAMP"),
       },
       where: { conditions: "id = ?1", params: [user?.id] },
+    });
+
+    await c.env.AUTHC1_ACTIVITY_QUEUE.send({
+      acitivity: "EmailConfirmedByLink",
+      id: user?.id,
+      applicationId,
+      created_at: Date.now(),
     });
 
     return c.html(

@@ -8,7 +8,7 @@ import {
   createApplicationError,
   nameOrSettingsRequired,
   updateApplicationError,
-  applicationNotFoundError,
+  unauthorizedDataRequestError,
 } from "../../../utils/error-responses";
 import {
   handleSuccess,
@@ -23,6 +23,7 @@ export const schema = z.object({
   email_template_body: z.string().optional(),
   email_template_subject: z.string().optional(),
   email_verification_enabled: z.boolean().optional(),
+  code_expires_in: z.number().optional(),
   email_verification_method: z.string().optional(),
   reset_confirmation_email: z.boolean().optional(),
   password_regex: z.string().optional(),
@@ -86,7 +87,7 @@ export type ApplicationProviderRequest = z.infer<typeof schema>;
 export const updateApplicationProviderController = async (c: Context) => {
   try {
     const db = new D1QB(c.env.AUTHC1);
-    const body: ApplicationProviderRequest = await c.req.valid();
+    const body: ApplicationProviderRequest = await c.req.valid("json");
     const applicationId = c.req.param("id");
     const user: IUsers = c.get("user");
     console.log("updateApplicationProviderController", body);
@@ -99,7 +100,7 @@ export const updateApplicationProviderController = async (c: Context) => {
     );
 
     if (!hasAccess) {
-      return handleError(applicationNotFoundError, c);
+      return handleError(unauthorizedDataRequestError, c);
     }
 
     await storeProviderSettings(c, applicationId, body);

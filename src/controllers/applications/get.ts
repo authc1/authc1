@@ -10,7 +10,6 @@ import {
   handleError,
 } from "../../utils/error-responses";
 import { handleSuccess, SuccessResponse } from "../../utils/success-responses";
-import { applicationSchema, applicationSettingsSchema } from "./getById";
 
 export const schema = z.object({
   select: z.string().trim().optional().default("*"),

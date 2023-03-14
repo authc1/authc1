@@ -1,11 +1,3 @@
-DROP TABLE IF EXISTS users;
-DROP TABLE IF EXISTS roles;
-DROP TABLE IF EXISTS applications;
-DROP TABLE IF EXISTS permissions;
-DROP TABLE IF EXISTS providers;
-DROP TABLE IF EXISTS user_roles;
-DROP TABLE IF EXISTS user_permissions;
-
 CREATE TABLE IF NOT EXISTS users (
   id TEXT PRIMARY KEY,
   created_at DATETIME DEFAULT CURRENT_TIMESTAMP,
@@ -27,8 +19,8 @@ CREATE TABLE IF NOT EXISTS users (
   phone_number_verified BOOLEAN DEFAULT false NOT NULL,
   FOREIGN KEY (provider_id) REFERENCES providers(id),
   FOREIGN KEY (application_id) REFERENCES applications(id),
-  UNIQUE (email, application_id),
-  UNIQUE (phone, application_id)
+  UNIQUE (email, application_id, provider_id),
+  UNIQUE (phone, application_id, provider_id)
 );
 
 CREATE TABLE IF NOT EXISTS applications (
@@ -73,7 +65,6 @@ CREATE TABLE sessions (
   ip TEXT,
   user_agent TEXT,
   region TEXT,
-  expiration_timestamp DATETIME,
   email_verify_code TEXT,
   phone_verify_code TEXT,
   FOREIGN KEY (user_id) REFERENCES users(id),
@@ -93,7 +84,8 @@ CREATE TABLE IF NOT EXISTS providers (
   created_at DATETIME DEFAULT CURRENT_TIMESTAMP,
   updated_at DATETIME DEFAULT CURRENT_TIMESTAMP,
   name TEXT NOT NULL,
-  description TEXT
+  description TEXT,
+  UNIQUE (name)
 );
 
 CREATE TABLE IF NOT EXISTS user_roles (
@@ -110,13 +102,6 @@ CREATE TABLE IF NOT EXISTS user_permissions (
   FOREIGN KEY (permission_id) REFERENCES permissions(id)
 );
 
-CREATE TABLE IF NOT EXISTS user_sessions (
-  user_id TEXT NOT NULL,
-  session_id INTEGER NOT NULL,
-  FOREIGN KEY (user_id) REFERENCES users(id),
-  FOREIGN KEY (session_id) REFERENCES sessions(id)
-);
-
 CREATE TABLE IF NOT EXISTS application_settings (
   application_id TEXT PRIMARY KEY,
   created_at DATETIME DEFAULT CURRENT_TIMESTAMP,
@@ -126,8 +111,8 @@ CREATE TABLE IF NOT EXISTS application_settings (
   algorithm TEXT DEFAULT 'HS256',
   redirect_uri TEXT,
   two_factor_authentication BOOLEAN DEFAULT false,
+  allow_multiple_accounts BOOLEAN DEFAULT false,
   session_expiration_time INTEGER,
-  token_expiration_time INTEGER,
   account_deletion_enabled BOOLEAN DEFAULT true,
   failed_login_attempts INTEGER DEFAULT 5,
   UNIQUE (application_id)
@@ -145,19 +130,5 @@ CREATE TABLE IF NOT EXISTS application_ip_whitelist (
 CREATE INDEX idx_sessions_user_id ON sessions (user_id);
 CREATE INDEX idx_sessions_session_id ON sessions (session_id);
 
--- Insert a new application
-INSERT INTO applications (id, name)
-VALUES ('0xa5b73c5a97b240bda6eaa7edfd33cff0', 'Authc1');
-
-INSERT INTO application_settings (application_id, secret)
-VALUES ('0xa5b73c5a97b240bda6eaa7edfd33cff0', '0e09089d2fbe4179bad7ae085b4c8fdc1bf2f9318c234b809aa86e83fad5a1f7');
-
 INSERT INTO providers (id, name, description, created_at, updated_at)
 VALUES (1, 'Email', 'Email login with password.', CURRENT_TIMESTAMP, CURRENT_TIMESTAMP);
-
-INSERT INTO users (id, name, email, password, provider_id, application_id)
-VALUES ('0x21e312fde025485db1e52e1b20899928', 'Subhendu Kundu', 'subhendukundu14@gmail.com', 'Admin@123', 1, '0xa5b73c5a97b240bda6eaa7edfd33cff0');
-
-UPDATE applications
-SET user_id = '0x21e312fde025485db1e52e1b20899928'
-WHERE id = '0xa5b73c5a97b240bda6eaa7edfd33cff0';

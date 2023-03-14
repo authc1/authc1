@@ -1,13 +1,26 @@
-import { Hono } from 'hono'
-import { validator } from 'hono/validator'
-import { confirmEmailControllerByCode, confirmEmailControllerByLink, confirmEmailByCodeValidator, confirmEmailByLinkValidator } from '../controllers/confirm/email'
-import { validateAccessToken } from '../middleware/validateAccessToken'
+import { Hono } from "hono";
+import { zValidator } from "@hono/zod-validator";
+import {
+  confirmEmailControllerByCode,
+  confirmEmailControllerByLink,
+  confirmEmailByCodeSchema,
+  confirmEmailByLinkSchema,
+} from "../controllers/confirm/email";
+import { validateAccessToken } from "../middleware/validateAccessToken";
 
-const confirmRoutes = new Hono()
+const confirmRoutes = new Hono();
 
-confirmRoutes.post('/email', validateAccessToken())
+confirmRoutes.post("/email", validateAccessToken());
 
-confirmRoutes.post("email", validator(confirmEmailByCodeValidator), confirmEmailControllerByCode)
-confirmRoutes.get("email", validator(confirmEmailByLinkValidator), confirmEmailControllerByLink)
+confirmRoutes.post(
+  "email",
+  zValidator("json", confirmEmailByCodeSchema),
+  confirmEmailControllerByCode
+);
+confirmRoutes.get(
+  "email",
+  zValidator("query", confirmEmailByLinkSchema),
+  confirmEmailControllerByLink
+);
 
-export { confirmRoutes }
+export { confirmRoutes };

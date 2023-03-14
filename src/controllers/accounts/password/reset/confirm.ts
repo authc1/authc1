@@ -2,16 +2,22 @@ import { Context } from "hono";
 import { D1QB } from "workers-qb";
 import { z } from "zod";
 import { IUsers } from "../../../../models/users";
-import { getApplicationProviderSettings, getApplicationSettings } from "../../../../utils/application";
+import {
+  getApplicationProviderSettings,
+  getApplicationSettings,
+} from "../../../../utils/application";
 import { invalidPassword } from "../../../../utils/error-responses";
 import { createHash } from "../../../../utils/hash";
 import { validatePassword } from "../../../register/email";
 
 import {
-    expiredOrInvalidCode,
+  expiredOrInvalidCode,
   handleError,
 } from "../../../../utils/error-responses";
-import { handleSuccess, SuccessResponse } from "../../../../utils/success-responses";
+import {
+  handleSuccess,
+  SuccessResponse,
+} from "../../../../utils/success-responses";
 
 export const confirmRestPasswordSchema = z.object({
   code: z.string().trim(),
@@ -39,15 +45,14 @@ type ConfirmEmailPassword = z.infer<typeof confirmRestPasswordSchema>;
 
 const confirmEmailResetController = async (c: Context) => {
   try {
-    const { code, password }: ConfirmEmailPassword = await c.req.valid();
+    const { code, password }: ConfirmEmailPassword = await c.req.valid("json");
     const user: IUsers = c.get("user");
     const applicationId = c.get("applicationId") as string;
     const sessionId = c.get("sessionId") as string;
     const db = new D1QB(c.env.AUTHC1);
-
-    const {
-      password_regex: passwordRegex,
-    } = await getApplicationProviderSettings(c, applicationId);
+    // TODO: Immediate
+    const { password_regex: passwordRegex } =
+      await getApplicationProviderSettings(c, applicationId);
 
     const isValidPassword = validatePassword(password, passwordRegex);
 
@@ -80,7 +85,9 @@ const confirmEmailResetController = async (c: Context) => {
       },
     });
     await c.env.AUTHC1_USER_DETAILS.put(user?.id, salt);
-  } catch (err: any) {}
+  } catch (err: any) {
+    console.log(err);
+  }
 };
 
 export default confirmEmailResetController;

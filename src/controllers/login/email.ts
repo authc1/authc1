@@ -1,5 +1,5 @@
-import { Context, Validator } from "hono";
-import { getApplicationSettings } from "../../utils/application";
+import { Context } from "hono";
+import { boolean, z } from "zod";
 import {
   handleError,
   invalidCredentials,
@@ -9,53 +9,57 @@ import {
 import { checkHash } from "../../utils/hash";
 import { createSession } from "../../utils/session";
 import { createAndSaveTokens } from "../../utils/token";
-import { getUserByEmail } from "../../utils/user";
+import { getUserByEmailWithProviderId } from "../../utils/user";
+import { ApplicationSchema } from "../applications/getById";
 
-type LoginRequest = {
-  email: string;
-  password: string;
-};
+export const loginSchema = z.object({
+  email: z.string(),
+  password: z.string(),
+});
 
-export function validator(v: Validator) {
-  return {
-    email: v.json("email").isRequired(),
-    password: v.json("password").isRequired(),
-  };
-}
+export type LoginRequest = z.infer<typeof loginSchema>;
 
 async function verifyPassword(
   password: string,
   salt: string,
   hash: string
 ): Promise<boolean> {
+  console.log(password, salt, hash);
   const isValid = await checkHash(password, salt, hash);
   console.log(isValid);
   return isValid;
 }
 
 const emailLoginController = async (c: Context) => {
-  const body = await c.req.json<LoginRequest>();
+  const body: LoginRequest = c.req.valid("json");
+
   const { email, password } = body;
   const applicationName = c.get("applicationName") as string;
   const applicationId = c.get("applicationId") as string;
+
   try {
-    const user = await getUserByEmail(c, email as string, applicationId, [
-      "id",
-      "password",
-      "email_verified",
-      "name",
-    ]);
+    const user = await getUserByEmailWithProviderId(
+      c,
+      email as string,
+      applicationId,
+      1,
+      ["id", "password", "email_verified", "name"]
+    );
+
     if (!user) {
       return handleError(userNotFound, c);
     }
+
     const {
       id,
       password: storedPassword,
       email_verified: emailVerified,
       name,
     } = user;
+
     const salt = await c.env.AUTHC1_USER_DETAILS?.get(id);
-    console.log("salt", salt);
+    const applicationInfo = c.get("applicationInfo") as ApplicationSchema;
+    console.log("applicationInfo", applicationInfo);
     const passwordMatched = await verifyPassword(
       password as string,
       salt as string,
@@ -66,30 +70,41 @@ const emailLoginController = async (c: Context) => {
       return handleError(invalidCredentials, c);
     }
 
-    const sessionId = await createSession(c, applicationId, id);
+    const sessionId = await createSession(c, applicationId, id as string);
 
     const {
       expires_in: expiresIn,
       secret,
       algorithm,
-    } = await getApplicationSettings(c, applicationId, [
-      "expires_in",
-      "secret",
-      "algorithm",
-    ]);
+    } = applicationInfo?.settings;
 
-    console.log(secret, algorithm);
-
-    const { accessToken, refreshToken } = await createAndSaveTokens(c, {
+    const tokenData = {
       applicationName,
-      expiresIn,
-      id,
+      expiresIn: expiresIn as number,
+      id: id as string,
       sessionId,
       email,
-      emailVerified,
+      emailVerified: Boolean(emailVerified),
       applicationId,
-      secret,
-      algorithm,
+      secret: secret as string,
+      algorithm: algorithm as string,
+    };
+    console.log("tokenData", tokenData);
+
+    const { accessToken, refreshToken } = await createAndSaveTokens(
+      c,
+      tokenData
+    );
+
+    console.log("refreshToken", refreshToken);
+
+    await c.env.AUTHC1_ACTIVITY_QUEUE.send({
+      acitivity: "LoggedIn",
+      userId: id,
+      applicationId,
+      name,
+      email,
+      created_at: new Date(),
     });
 
     return c.json({
@@ -102,6 +117,7 @@ const emailLoginController = async (c: Context) => {
     });
   } catch (err: any) {
     console.log(err);
+    console.log(JSON.stringify(err));
     return handleError(loginError, c, err);
   }
 };

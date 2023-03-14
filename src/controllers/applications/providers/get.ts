@@ -3,7 +3,7 @@ import { z } from "zod";
 import { JwtPayloadToUser } from "../../../models/tokens";
 
 import {
-  applicationNotFoundError,
+  unauthorizedDataRequestError,
   getApplicationError,
   handleError,
 } from "../../../utils/error-responses";
@@ -35,7 +35,7 @@ const getApplicationProvidersController = async (c: Context) => {
       [applicationId, user?.id]
     );
     if (!hasAccess) {
-      return handleError(applicationNotFoundError, c);
+      return handleError(unauthorizedDataRequestError, c);
     }
 
     const data = await getProviderDefaultSettings(c, applicationId);

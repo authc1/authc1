@@ -21,8 +21,8 @@ export const applicationSettingsSchema = z.object({
   algorithm: z.string().optional().nullable(),
   redirect_uri: z.string().optional().nullable(),
   two_factor_authentication: z.coerce.boolean().optional(),
+  allow_multiple_accounts: z.coerce.boolean().optional(),
   session_expiration_time: z.number().optional().nullable(),
-  token_expiration_time: z.number().optional().nullable(),
   account_deletion_enabled: z.coerce.boolean().optional(),
   failed_login_attempts: z.number().optional(),
 });
@@ -36,7 +36,7 @@ export const applicationSchema = z.object({
   settings: applicationSettingsSchema,
 });
 
-type ApplicationSchema = z.infer<typeof applicationSchema>;
+export type ApplicationSchema = z.infer<typeof applicationSchema>;
 type ApplicationSettingsSchema = z.infer<typeof applicationSettingsSchema>;
 
 const getApplicationByIdController = async (c: Context) => {

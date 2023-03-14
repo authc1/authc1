@@ -18,7 +18,7 @@ interface Data {
   [key: string]: any;
 }
 
-const userSchema = z.object({
+export const userSchema = z.object({
   id: z.string().optional(),
   created_at: z.date().optional(),
   updated_at: z.date().optional(),
@@ -38,12 +38,12 @@ const userSchema = z.object({
   phone_number_verified: z.coerce.boolean().optional(),
 });
 
-type UserSchema = z.infer<typeof userSchema>;
+export type UserSchema = z.infer<typeof userSchema>;
 
 const getUserByIdController = async (c: Context) => {
   try {
     const user: JwtPayloadToUser = c.get("user");
-    const fields = c.req.query("select");
+    const fields: any = c.req.query("select");
     const db = new D1QB(c.env.AUTHC1);
 
     const userData = await db.fetchOne({

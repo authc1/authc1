@@ -8,7 +8,7 @@ import {
   createApplicationError,
   nameOrSettingsRequired,
   updateApplicationError,
-  applicationNotFoundError,
+  unauthorizedDataRequestError,
 } from "../../utils/error-responses";
 import { handleSuccess, SuccessResponse } from "../../utils/success-responses";
 import { hasRowAccess } from "../../utils/hasRowAccess";
@@ -21,9 +21,17 @@ export const schema = z.object({
       secret: z.string().optional(),
       algorithm: z.string().optional(),
       redirect_uri: z.string().optional(),
-      two_factor_authentication: z.coerce.string().optional(),
+      two_factor_authentication: z.union([
+        z.literal(true).transform(() => 1),
+        z.literal(false).transform(() => 0),
+        z.literal(undefined).transform(() => 0),
+      ]).optional(),
+      allow_multiple_accounts: z.union([
+        z.literal(true).transform(() => 1),
+        z.literal(false).transform(() => 0),
+        z.literal(undefined).transform(() => 0),
+      ]).optional(),
       session_expiration_time: z.number().optional(),
-      token_expiration_time: z.number().optional(),
       account_deletion_enabled: z.coerce.string().optional(),
       failed_login_attempts: z.number().optional(),
     })
@@ -35,8 +43,9 @@ export type ApplicationRequest = z.infer<typeof schema>;
 export const updateApplicationController = async (c: Context) => {
   try {
     const db = new D1QB(c.env.AUTHC1);
-    const body: ApplicationRequest = await c.req.valid();
+    const body: ApplicationRequest = await c.req.valid("json");
     const applicationId = c.req.param("id");
+    console.log("updateApplicationController", body, applicationId);
 
     const user: IUsers = c.get("user");
     const { name, settings } = body;
@@ -52,7 +61,7 @@ export const updateApplicationController = async (c: Context) => {
     );
 
     if (!hasAccess) {
-      return handleError(applicationNotFoundError, c);
+      return handleError(unauthorizedDataRequestError, c);
     }
 
     const promises = [];

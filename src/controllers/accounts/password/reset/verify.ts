@@ -22,7 +22,7 @@ export type ResetCode = z.infer<typeof resetCodeSchema>;
 
 const verifyPasswordResetCodeController = async (c: Context) => {
   try {
-    const body: ResetCode = await c.req.valid();
+    const body: ResetCode = await c.req.valid("json");
     const { code } = body;
     const user: IUsers = c.get("user");
     const sessionId = c.get("sessionId") as string;

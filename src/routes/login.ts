@@ -1,11 +1,16 @@
-import { Hono } from 'hono'
-import { validator } from 'hono/validator'
-import emailLoginController, { validator as emailLoginValidator } from '../controllers/login/email'
+import { Hono } from "hono";
+import { zValidator } from "@hono/zod-validator";
+import emailLoginController, { loginSchema } from "../controllers/login/email";
 
-const loginRoutes = new Hono()
+const loginRoutes = new Hono();
 
 // loginRoutes.post('/email', validateIdToken())
 
-loginRoutes.post("email", validator(emailLoginValidator), emailLoginController)
+loginRoutes.post(
+  "email",
+  zValidator("json", loginSchema),
+  emailLoginController
+);
 
-export { loginRoutes }
+
+export { loginRoutes };

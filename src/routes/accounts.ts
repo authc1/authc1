@@ -1,55 +1,59 @@
 import { Handler, Hono } from "hono";
+import { zValidator } from "@hono/zod-validator";
 import getUserByIdController from "../controllers/accounts/me";
-import confirmEmailResetController, { confirmRestPasswordSchema } from "../controllers/accounts/password/reset/confirm";
+import confirmEmailResetController, {
+  confirmRestPasswordSchema,
+} from "../controllers/accounts/password/reset/confirm";
 import sendResetCodeController from "../controllers/accounts/password/reset/send";
-import verifyPasswordResetCodeController, { resetCodeSchema } from "../controllers/accounts/password/reset/verify";
+import verifyPasswordResetCodeController, {
+  resetCodeSchema,
+} from "../controllers/accounts/password/reset/verify";
 
 import updateAccessTokenByRefreshToken, {
   schema as refreshAccessTokenSchema,
 } from "../controllers/accounts/tokens/update";
-import updateUserController, { updateUserSchema } from "../controllers/accounts/update";
+import updateUserController, {
+  updateUserSchema,
+} from "../controllers/accounts/update";
 
 import { validateAccessToken } from "../middleware/validateAccessToken";
 
-import { zValidtor } from "../utils/validator";
-
 const accountsRoutes = new Hono();
-accountsRoutes.use("*", validateAccessToken());
 
 const passwordRoutes = new Hono();
+passwordRoutes.use("*", validateAccessToken());
+
+const userRoutes = new Hono();
+userRoutes.use("*", validateAccessToken());
+
 accountsRoutes.route("/password", passwordRoutes);
+accountsRoutes.route("/user", passwordRoutes);
 
 accountsRoutes.post(
   "/access-token",
-  zValidtor(refreshAccessTokenSchema),
+  zValidator("json", refreshAccessTokenSchema),
   updateAccessTokenByRefreshToken
 );
 
-passwordRoutes.post(
-  "/reset/send-code",
-  sendResetCodeController
-);
+passwordRoutes.post("/reset/send-code", sendResetCodeController);
 
 passwordRoutes.post(
   "/reset/verify-code",
-  zValidtor(resetCodeSchema),
+  zValidator("json", resetCodeSchema),
   verifyPasswordResetCodeController
 );
 
 passwordRoutes.post(
   "/reset/confirm-password",
-  zValidtor(confirmRestPasswordSchema),
+  zValidator("json", confirmRestPasswordSchema),
   confirmEmailResetController
 );
 
-accountsRoutes.post(
+userRoutes.post(
   "/me",
-  zValidtor(updateUserSchema),
+  zValidator("json", updateUserSchema),
   updateUserController
 );
 
-accountsRoutes.get(
-  "/me",
-  getUserByIdController
-);
+userRoutes.get("/me", getUserByIdController);
 export { accountsRoutes };

@@ -5,7 +5,6 @@ export interface ApplicationSetting {
   redirect_uri?: string;
   two_factor_authentication?: boolean;
   session_expiration_time?: number;
-  token_expiration_time?: number;
   account_deletion_enabled?: boolean;
   failed_login_attempts?: number;
   created_at?: string;

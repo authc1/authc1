@@ -1,9 +1,15 @@
-import { Hono } from 'hono'
-import { validator } from 'hono/validator'
+import { Hono } from "hono";
+import { zValidator } from "@hono/zod-validator";
 
-import emailRegistrationController, { validator as emailRegistrationValidator } from '../controllers/register/email'
-const registerRoutes = new Hono()
+import emailRegistrationController, {
+  registerSchema,
+} from "../controllers/register/email";
+const registerRoutes = new Hono();
 
-registerRoutes.post("email", validator(emailRegistrationValidator), emailRegistrationController)
+registerRoutes.post(
+  "email",
+  zValidator("json", registerSchema),
+  emailRegistrationController
+);
 
-export { registerRoutes }
+export { registerRoutes };

@@ -17,7 +17,7 @@ export const createSession = async (c: Context, applicationId: string, id: strin
             regionCode,
             postalCode,
             // @ts-ignore
-        } = c.req?.cf
+        } = c.req?.raw?.cf;
 
         const metadata = JSON.stringify({
             latitude,
@@ -62,7 +62,7 @@ export const updateSession = async (c: Context, sessionId: string, updates: { [k
     }
 };
 
-export const getSessionById = async (c: Context, sessionId: string, columns: string[]): Promise<ISession | null> => {
+export const getSessionById = async (c: Context, sessionId: string, columns: string[]): Promise<any> => {
     try {
         const columnsString = columns.join(', ');
         const { results } = await c.env.AUTHC1.prepare(

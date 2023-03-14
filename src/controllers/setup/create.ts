@@ -1,22 +1,27 @@
 import { Context } from "hono";
-import { IUsers } from "../../models/users";
 import { D1QB } from "workers-qb";
 import { z } from "zod";
-
+import { getApplicationProviderSettings } from "../../utils/application";
 import {
-  handleError,
   createApplicationError,
+  handleError,
+  invalidPassword,
 } from "../../utils/error-responses";
+import { createHash } from "../../utils/hash";
+import { storeProviderSettings } from "../../utils/kv";
+import { createSession } from "../../utils/session";
 import {
   generateRandomID,
   generateUniqueIdWithPrefix,
 } from "../../utils/string";
 import { handleSuccess, SuccessResponse } from "../../utils/success-responses";
-import { storeProviderSettings } from "../../utils/kv";
-import { ProviderSettings } from "../../models/provider";
+import { createAndSaveTokens } from "../../utils/token";
+import { saveUser, validatePassword } from "../register/email";
 
 export const schema = z.object({
   name: z.string(),
+  email: z.string(),
+  password: z.string(),
   settings: z
     .object({
       expires_in: z.number().default(86400),
@@ -32,19 +37,17 @@ export const schema = z.object({
     .default({}),
 });
 
-export type ApplicationRequest = z.infer<typeof schema>;
+type ApplicationRequest = z.infer<typeof schema>;
 
-const createApplicationController = async (c: Context) => {
+const setupApplicationController = async (c: Context) => {
   try {
     const db = new D1QB(c.env.AUTHC1);
     const body: ApplicationRequest = await c.req.valid("json");
-    const user: IUsers = c.get("user");
-    const { name, settings = {} } = body;
+    const { name, email, password, settings } = body;
     const id = generateUniqueIdWithPrefix();
     const applicationData = {
       id,
       name,
-      user_id: user?.id,
     };
     const settingsData = {
       application_id: id,
@@ -62,8 +65,34 @@ const createApplicationController = async (c: Context) => {
       }),
       storeProviderSettings(c, id),
     ]);
+
+    const { password_regex: passwordRegex } =
+      await getApplicationProviderSettings(c, id);
+    console.log("passwordRegex", passwordRegex);
+    const isValidPassword = validatePassword(password, passwordRegex);
+
+    if (passwordRegex && !isValidPassword) {
+      return handleError(invalidPassword, c);
+    }
+
+    const { salt, hash } = await createHash(password);
+    console.log("salt, hash", salt, hash);
+    const userId = await saveUser(c, name as string, email, hash, 1, id, 1);
+    const sessionId = await createSession(c, id, userId);
+
+    console.log("sessionId", sessionId);
+
+    await Promise.all([
+      await c.env.AUTHC1_USER_DETAILS.put(userId, salt),
+      db.update({
+        tableName: "applications",
+        data: { user_id: userId },
+        where: { conditions: "id = ?1", params: [id] },
+      }),
+    ]);
+
     const response: SuccessResponse = {
-      message: "Application created successfully",
+      message: "Application Setup successfully",
       data: {
         id,
         name,
@@ -76,4 +105,4 @@ const createApplicationController = async (c: Context) => {
   }
 };
 
-export default createApplicationController;
+export default setupApplicationController;
