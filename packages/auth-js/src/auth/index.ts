@@ -1,21 +1,24 @@
-import { AuthEvent, EventEmitter, EventHandler } from "../utils/events";
-import * as email from "./email";
+import { AuthEvent, EventEmitter } from "../utils/events";
+import * as EmailAuth from "./email-auth";
+import * as storage from "../utils/storage";
 
 type AuthStateChangedSubscription = {
   unsubscribe: () => void;
 };
 
 export class Authc1Client {
-  private appId: string;
+  private readonly appId: string;
   private readonly eventEmitter: EventEmitter;
-  private readonly email: email.Email;
+  private readonly emailAuthClient: EmailAuth.EmailAuthClient;
+  private readonly sessionKey: string;
 
   constructor(appId: string) {
     const eventEmitter = new EventEmitter(appId);
     const endpoint = `https://api.authc1.com/v1/${appId}`;
     this.appId = appId;
     this.eventEmitter = eventEmitter;
-    this.email = new email.Email(endpoint, eventEmitter);
+    this.emailAuthClient = new EmailAuth.EmailAuthClient(appId, endpoint, eventEmitter);
+    this.sessionKey = `authc1-${appId}-auth-session`;
   }
 
   public async signInWithEmail(
@@ -23,7 +26,7 @@ export class Authc1Client {
     password: string,
     callback: (error: Error | null, data?: any) => void
   ) {
-    await this.email.login(email, password, callback);
+    await this.emailAuthClient.login(email, password, callback);
   }
 
   public async registerWithEmail(
@@ -31,36 +34,35 @@ export class Authc1Client {
     password: string,
     callback: (error: Error | null, data?: any) => void
   ) {
-    await this.email.register(email, password, callback);
+    await this.emailAuthClient.register(email, password, callback);
   }
 
   public async sendEmailVerification(
     email: string,
     callback: (error: Error | null, data?: any) => void
   ) {
-    await this.email.sendVerificationEmail(email, callback);
+    await this.emailAuthClient.sendVerificationEmail(email, callback);
   }
 
   public async signOut(callback: (error: Error | null, data?: any) => void) {
-    await this.email.logout(callback);
+    await this.emailAuthClient.logout(callback);
   }
 
-  public async verifyOTP(
-    phoneOrEmail: string,
+  public async confirmEmailWithOtp(
+    email: string,
     otp: string,
     callback: (error: Error | null, data?: any) => void
   ) {
-    // Implement your verify OTP logic here
+    await this.emailAuthClient.confirmEmail(email, otp, callback);
   }
 
-  public async refreshSession(
-    callback: (error: Error | null, data?: any) => void
-  ) {
-    // Implement your session refresh logic here
-  }
-
-  public async getUser(callback: (error: Error | null, data?: any) => void) {
-    // Implement your get user logic here
+  public async getSession(callback: (error: Error | null, data?: any) => void) {
+    const sessionData = JSON.parse(storage.getItem(this.sessionKey));
+    if (sessionData) {
+      callback(null, sessionData);
+    } else {
+      callback(new Error(`Session not found.`));
+    }
   }
 
   onAuthStateChange(

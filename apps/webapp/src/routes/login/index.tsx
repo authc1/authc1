@@ -5,9 +5,6 @@ import { Link } from "@builder.io/qwik-city";
 import { signIn } from "~/utils/auth";
 import Button from "~/components/button";
 import { LoginHero } from "~/components/icons/login-hero";
-import { sum } from "@authc1/auth-js";
-
-console.log(sum(1, 2))
 
 export const useSigninAction = routeAction$(
   async (data, { cookie, fail, redirect, env }) => {
