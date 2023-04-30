@@ -1,7 +1,7 @@
 import { AuthEvent, EventEmitter } from "../utils/events";
 import * as EmailAuth from "./email-auth";
 import * as storage from "../utils/storage";
-import type { Session } from "./email";
+import type { Session } from "./email-auth";
 
 type AuthStateChangedSubscription = {
   unsubscribe: () => void;
@@ -83,7 +83,7 @@ export class Authc1Client {
 
   public async getSession(): Promise<Session | undefined> {
     try {
-      const sessionData = await storage.get(this.sessionKey);
+      const sessionData = await storage.getItem(this.sessionKey);
       if (sessionData) {
         const session: Session = {
           accessToken: sessionData.access_token,
@@ -100,7 +100,7 @@ export class Authc1Client {
 
   public async setSession(session: Session): Promise<void> {
     try {
-      await storage.set(this.sessionKey, session);
+      await storage.setItem(this.sessionKey, session);
     } catch (err) {
       throw err;
     }
@@ -129,7 +129,7 @@ export class Authc1Client {
 
   private async clearSession(): Promise<void> {
     try {
-      await storage.remove(this.sessionKey);
+      await storage.removeItem(this.sessionKey);
     } catch (err) {
       throw err;
     }

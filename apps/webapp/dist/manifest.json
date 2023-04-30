@@ -1,9 +1,0 @@
-{
-  "$schema": "https://json.schemastore.org/web-manifest-combined.json",
-  "name": "AuthC1",
-  "short_name": "Welcome to AuthC1",
-  "start_url": ".",
-  "display": "standalone",
-  "background_color": "#fff",
-  "description": "AuthC1 project app."
-}
