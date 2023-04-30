@@ -10,11 +10,14 @@ The easiest way to secure your app or website with powerful authentication and a
 Built for Edge
 </h3>
 
-<p align="center">
+<div align="center">
+
 | Cloudflare Queues | Cloudflare Pages | Cloudflare Workers |
 |:-----------------:|:----------------:|:------------------:|
 | <img src="/apps/webapp/public/logo/cloudflare/queues.svg" alt="Cloudflare Queues" width="80"> | <img src="/apps/webapp/public/logo/cloudflare/pages.svg" alt="Cloudflare Pages" width="80"> | <img src="/apps/webapp/public/logo/cloudflare/workers.svg" alt="Cloudflare Workers" width="80"> |
-</p>
+
+</div>
+
 
 
 ## Table of Contents
