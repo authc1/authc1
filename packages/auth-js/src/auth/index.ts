@@ -1,13 +1,13 @@
 import { AuthEvent, EventEmitter } from "../utils/events";
 import * as EmailAuth from "./email-auth";
 import * as storage from "../utils/storage";
+import type { Session } from "./email";
 
 type AuthStateChangedSubscription = {
   unsubscribe: () => void;
 };
 
 export class Authc1Client {
-  private readonly appId: string;
   private readonly eventEmitter: EventEmitter;
   private readonly emailAuthClient: EmailAuth.EmailAuthClient;
   private readonly sessionKey: string;
@@ -15,7 +15,6 @@ export class Authc1Client {
   constructor(appId: string) {
     const eventEmitter = new EventEmitter(appId);
     const endpoint = `https://api.authc1.com/v1/${appId}`;
-    this.appId = appId;
     this.eventEmitter = eventEmitter;
     this.emailAuthClient = new EmailAuth.EmailAuthClient(appId, endpoint, eventEmitter);
     this.sessionKey = `authc1-${appId}-auth-session`;
@@ -23,49 +22,92 @@ export class Authc1Client {
 
   public async signInWithEmail(
     email: string,
-    password: string,
-    callback: (error: Error | null, data?: any) => void
-  ) {
-    await this.emailAuthClient.login(email, password, callback);
+    password: string
+  ): Promise<Session> {
+    try {
+      const result = await this.emailAuthClient.login(email, password);
+      const session: Session = {
+        accessToken: result.access_token,
+        refreshToken: result.refresh_token,
+        expiresIn: result.expires_in,
+        localId: result.local_id,
+      };
+      return session;
+    } catch (err) {
+      throw err;
+    }
   }
 
   public async registerWithEmail(
     email: string,
-    password: string,
-    callback: (error: Error | null, data?: any) => void
-  ) {
-    await this.emailAuthClient.register(email, password, callback);
+    password: string
+  ): Promise<void> {
+    try {
+      await this.emailAuthClient.register(email, password);
+    } catch (err) {
+      throw err;
+    }
+    return;
   }
 
-  public async sendEmailVerification(
-    email: string,
-    callback: (error: Error | null, data?: any) => void
-  ) {
-    await this.emailAuthClient.sendVerificationEmail(email, callback);
+  public async sendEmailVerification(email: string): Promise<void> {
+    try {
+      await this.emailAuthClient.sendVerificationEmail(email);
+    } catch (err) {
+      throw err;
+    }
+    return;
   }
 
-  public async signOut(callback: (error: Error | null, data?: any) => void) {
-    await this.emailAuthClient.logout(callback);
+  public async signOut(): Promise<void> {
+    try {
+      await this.emailAuthClient.logout();
+      await this.clearSession();
+    } catch (err) {
+      throw err;
+    }
+    return;
   }
 
   public async confirmEmailWithOtp(
     email: string,
-    otp: string,
-    callback: (error: Error | null, data?: any) => void
-  ) {
-    await this.emailAuthClient.confirmEmail(email, otp, callback);
+    otp: string
+  ): Promise<void> {
+    try {
+      await this.emailAuthClient.confirmEmail(email, otp);
+    } catch (err) {
+      throw err;
+    }
+    return;
   }
 
-  public async getSession(callback: (error: Error | null, data?: any) => void) {
-    const sessionData = JSON.parse(storage.getItem(this.sessionKey));
-    if (sessionData) {
-      callback(null, sessionData);
-    } else {
-      callback(new Error(`Session not found.`));
+  public async getSession(): Promise<Session | undefined> {
+    try {
+      const sessionData = await storage.get(this.sessionKey);
+      if (sessionData) {
+        const session: Session = {
+          accessToken: sessionData.access_token,
+          refreshToken: sessionData.refresh_token,
+          expiresIn: sessionData.expires_in,
+          localId: sessionData.local_id,
+        };
+        return session;
+      }
+    } catch (err) {
+      throw err;
     }
   }
 
-  onAuthStateChange(
+  public async setSession(session: Session): Promise<void> {
+    try {
+      await storage.set(this.sessionKey, session);
+    } catch (err) {
+      throw err;
+    }
+    return;
+  }
+
+  public onAuthStateChange(
     handler: (event: AuthEvent, session: any) => void
   ): AuthStateChangedSubscription {
     for (const event in AuthEvent) {
@@ -83,5 +125,14 @@ export class Authc1Client {
         }
       },
     };
+  }
+
+  private async clearSession(): Promise<void> {
+    try {
+      await storage.remove(this.sessionKey);
+    } catch (err) {
+      throw err;
+    }
+    return;
   }
 }

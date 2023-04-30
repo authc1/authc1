@@ -147,9 +147,16 @@ var EmailAuthClient = class {
         userId: result.local_id,
         session: result.session_id
       });
-      callback(null, result);
+      if (callback) {
+        callback(null, result);
+      }
+      return result;
     } else {
-      callback(new Error(response.statusText));
+      const err = new Error(response.statusText);
+      if (callback) {
+        callback(err);
+      }
+      throw err;
     }
   }
   async register(email, password, callback) {
@@ -157,9 +164,16 @@ var EmailAuthClient = class {
     const response = await post(url, { email, password });
     if (response.status === 200) {
       const result = response.data;
-      callback(null, result);
+      if (callback) {
+        callback(null, result);
+      }
+      return result;
     } else {
-      callback(new Error(response.statusText));
+      const err = new Error(response.statusText);
+      if (callback) {
+        callback(err);
+      }
+      throw err;
     }
   }
   async sendVerificationEmail(email, callback) {
@@ -167,9 +181,16 @@ var EmailAuthClient = class {
     const response = await post(url, { email });
     if (response.status === 200) {
       const result = response.data;
-      callback(null, result);
+      if (callback) {
+        callback(null, result);
+      }
+      return result;
     } else {
-      callback(new Error(response.statusText));
+      const err = new Error(response.statusText);
+      if (callback) {
+        callback(err);
+      }
+      throw err;
     }
   }
   async confirmEmail(email, otp, callback) {
@@ -177,20 +198,25 @@ var EmailAuthClient = class {
     const response = await post(url, { email, otp });
     if (response.status === 200) {
       const result = response.data;
-      callback(null, result);
+      if (callback) {
+        callback(null, result);
+      }
+      return result;
     } else {
-      callback(new Error(response.statusText));
+      const err = new Error(response.statusText);
+      if (callback) {
+        callback(err);
+      }
+      throw err;
     }
   }
   async logout(callback) {
-    const sessionId = this.sessionId;
-    if (!sessionId) {
-      callback(new Error("Not logged in."));
-      return;
-    }
     this.clearSessionId();
     this.eventEmitter.emit("signed_out" /* SIGNED_OUT */);
-    callback(null);
+    if (callback) {
+      callback(null);
+    }
+    return null;
   }
 };
 
