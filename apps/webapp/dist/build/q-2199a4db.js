@@ -1,0 +1,1 @@
+import{d as e,K as r}from"./q-0edf180f.js";const s=n=>e("svg",null,{viewBox:"0 0 16 16",fill:"none","aria-hidden":"true",class:r(l=>l.styles,[n])},e("path",null,{d:"M6.75 5.75 9.25 8l-2.5 2.25",strokeWidth:"1.5",strokeLinecap:"round",strokeLinejoin:"round"},null,3,null),3,"I7_0");export{s as s_C2eix3EHeT8};

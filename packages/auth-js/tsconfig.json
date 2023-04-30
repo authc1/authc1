@@ -1,0 +1,11 @@
+{
+  "compilerOptions": {
+    "target": "ESNext",
+    "lib": ["esnext", "dom"],
+    "declaration": true,
+    "declarationDir": "dist",
+    "module": "esnext",
+    "moduleResolution": "node",
+    "composite": true
+  }
+}
