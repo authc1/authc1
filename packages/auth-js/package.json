@@ -6,6 +6,7 @@
   "main": "index.js",
   "scripts": {
     "build": "tsup src --target esnext --dts",
+    "dev": "echo 'No build script for this package'",
     "test": "echo \"Error: no test specified\" && exit 1"
   },
   "keywords": [],

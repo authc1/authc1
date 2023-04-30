@@ -4,6 +4,8 @@
 /lib-types
 /server
 .turbo/
+**/dist/
+**/server/
 
 # Development
 node_modules
