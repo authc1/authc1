@@ -7,6 +7,11 @@
     "build": "turbo run build",
     "test": "echo \"Error: no test specified\" && exit 1"
   },
+  "workspaces": [
+    "packages/*",
+    "apps/*",
+    "backend"
+  ],
   "keywords": [],
   "author": "",
   "license": "ISC",
