@@ -1,0 +1,39 @@
+name = "authc1-do"
+compatibility_date = "2023-03-07"
+main="src/index.ts"
+usage_model = "bundled"
+
+kv_namespaces = [
+  { binding = "AUTHC1_USER_DETAILS", preview_id = "97156442adbc449a9502ff633e06f905", id = "97156442adbc449a9502ff633e06f905" },
+  { binding = "AUTHC1_DO_USER_TOKEN_DETAILS", preview_id = "e710f9e6e2974c59982952fe5153a3a9", id = "e710f9e6e2974c59982952fe5153a3a9" },
+  { binding = "AUTHC1_APPLICATION_PROVIDER_DETAILS", preview_id = "4ca6c6de25c040649f04736c6381b043", id = "4ca6c6de25c040649f04736c6381b043" }
+]
+
+[durable_objects]
+bindings = [
+	{ name = "AuthC1App", class_name = "AuthC1App" },
+  { name = "AuthC1Token", class_name = "AuthC1Token" },
+  { name = "AuthC1User", class_name = "AuthC1User" },
+  { name = "AuthC1Activity", class_name = "AuthC1Activity" }
+]
+
+[[queues.producers]]
+queue = "authc1-do-activity-queue"
+binding = "AUTHC1_ACTIVITY_QUEUE"
+
+[[queues.consumers]]
+queue = "authc1-do-activity-queue"
+max_batch_size = 1
+max_batch_timeout = 5
+
+[[migrations]]
+tag = "v1"
+new_classes = ["AuthC1App", "AuthC1User", "AuthC1Activity"]
+
+[[migrations]]
+tag = "v2"
+deleted_classes = ["AuthC1Token"]
+
+[[migrations]]
+tag = "v3"
+new_classes = ["AuthC1Token"]
