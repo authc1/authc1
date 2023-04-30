@@ -44,6 +44,7 @@
   "dependencies": {
     "@authc1/auth-js": "workspace:*",
     "@tsndr/cloudflare-worker-jwt": "^2.2.1",
-    "date-fns": "^2.29.3"
+    "date-fns": "^2.29.3",
+    "zod": "^3.21.4"
   }
 }
