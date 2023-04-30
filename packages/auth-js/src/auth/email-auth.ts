@@ -30,6 +30,8 @@ export interface RegisterResult {
   name?: string;
 }
 
+type AuthCallback<T> = (error: Error | null, result?: T) => void;
+
 export class EmailAuthClient {
   private readonly endpoint: string;
   private readonly eventEmitter: EventEmitter;
@@ -48,6 +50,10 @@ export class EmailAuthClient {
     storage.setItem(this.sessionKey, sessionId);
   }
 
+  public getSessionId(): string {
+    return this.sessionId;
+  }
+
   private clearSessionId() {
     this.sessionId = undefined;
     storage.removeItem(this.sessionKey);
@@ -56,8 +62,8 @@ export class EmailAuthClient {
   public async login(
     email: string,
     password: string,
-    callback: (error: Error | null, result?: LoginResult) => void
-  ) {
+    callback?: AuthCallback<LoginResult>
+  ): Promise<LoginResult> {
     const url = `${this.endpoint}/login`;
     const response = await post(url, { email, password });
     if (response.status === 200) {
@@ -67,67 +73,90 @@ export class EmailAuthClient {
         userId: result.local_id,
         session: result.session_id,
       });
-      callback(null, result);
+      if (callback) {
+        callback(null, result);
+      }
+      return result;
     } else {
-      callback(new Error(response.statusText));
+      const err = new Error(response.statusText);
+      if (callback) {
+        callback(err);
+      }
+      throw err;
     }
   }
 
   public async register(
     email: string,
     password: string,
-    callback: (error: Error | null, result?: RegisterResult) => void
-  ) {
+    callback?: AuthCallback<RegisterResult>
+  ): Promise<RegisterResult> {
     const url = `${this.endpoint}/register`;
     const response = await post(url, { email, password });
     if (response.status === 200) {
       const result = response.data as RegisterResult;
-      callback(null, result);
+      if (callback) {
+        callback(null, result);
+      }
+      return result;
     } else {
-      callback(new Error(response.statusText));
+      const err = new Error(response.statusText);
+      if (callback) {
+        callback(err);
+      }
+      throw err;
     }
   }
 
   public async sendVerificationEmail(
     email: string,
-    callback: (error: Error | null, result?: any) => void
-  ) {
+    callback?: AuthCallback<any>
+  ): Promise<any> {
     const url = `${this.endpoint}/email/send-verification`;
     const response = await post(url, { email });
     if (response.status === 200) {
       const result = response.data;
-      callback(null, result);
+      if (callback) {
+        callback(null, result);
+      }
+      return result;
     } else {
-      callback(new Error(response.statusText));
+      const err = new Error(response.statusText);
+      if (callback) {
+        callback(err);
+      }
+      throw err;
     }
   }
 
   public async confirmEmail(
     email: string,
     otp: string,
-    callback: (error: Error | null, result?: any) => void
-  ) {
+    callback?: AuthCallback<any>
+  ): Promise<any> {
     const url = `${this.endpoint}/email/confirm`;
     const response = await post(url, { email, otp });
     if (response.status === 200) {
       const result = response.data;
-      callback(null, result);
+      if (callback) {
+        callback(null, result);
+      }
+      return result;
     } else {
-      callback(new Error(response.statusText));
+      const err = new Error(response.statusText);
+      if (callback) {
+        callback(err);
+      }
+      throw err;
     }
   }
 
-  public async logout(
-    callback: (error: Error | null) => void
-  ) {
-    const sessionId = this.sessionId;
-    if (!sessionId) {
-      callback(new Error("Not logged in."));
-      return;
-    }
+  public async logout(callback?: AuthCallback<any>): Promise<any> {
     this.clearSessionId();
     this.eventEmitter.emit(AuthEvent.SIGNED_OUT);
-    callback(null);
+    if (callback) {
+      callback(null);
+    }
+    return null;
   }
 }
-
