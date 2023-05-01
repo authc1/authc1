@@ -2,9 +2,9 @@
   "name": "@authc1/backend",
   "author": "Subh <subhendukundu14@gmail.com>",
   "scripts": {
-    "dev": "wrangler dev src/index.ts",
+    "start": "echo 'No build script for this package'",
     "build": "echo 'No build script for this package'",
-    "start": "npx wrangler dev --local --persist",
+    "dev": "npx wrangler dev --local --persist",
     "deploy": "npx wrangler publish src/index.ts"
   },
   "dependencies": {

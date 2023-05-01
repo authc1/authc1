@@ -34,10 +34,12 @@ importers:
       vite: 4.2.2
       vite-tsconfig-paths: 4.2.0
       wrangler: latest
+      zod: ^3.21.4
     dependencies:
       '@authc1/auth-js': link:../../packages/auth-js
       '@tsndr/cloudflare-worker-jwt': 2.2.1
       date-fns: 2.30.0
+      zod: 3.21.4
     devDependencies:
       '@builder.io/qwik': 0.104.0_undici@5.21.2
       '@builder.io/qwik-city': 0.104.0_@builder.io+qwik@0.104.0
