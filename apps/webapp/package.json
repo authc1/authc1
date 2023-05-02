@@ -34,7 +34,7 @@
     "eslint-plugin-qwik": "0.104.0",
     "postcss": "^8.4.21",
     "prettier": "2.8.7",
-    "tailwindcss": "^3.1.8",
+    "tailwindcss": "^3.3.2",
     "typescript": "5.0.4",
     "undici": "5.21.2",
     "vite": "4.2.2",

@@ -1,16 +1,50 @@
-export function setItem(key: string, value: any): void {
-  localStorage.setItem(key, JSON.stringify(value));
+export interface Storage {
+  getItem(key: string): any | null;
+  setItem(key: string, value: string): void;
+  removeItem(key: string): void;
+  length: number;
+  key(index: number): string | null;
+  clear(): void;
 }
 
-export function getItem(key: string): any | null {
-  const value = localStorage.getItem(key);
-  return value ? JSON.parse(value) : null;
-}
+export class StorageManager {
+  private readonly storage: Storage;
 
-export function removeItem(key: string): void {
-  localStorage.removeItem(key);
-}
+  constructor(options: { storageType: Storage }) {
+    this.storage = options.storageType;
+  }
 
-export function clear(): void {
-  localStorage.clear();
+  getItem(key: string): string | null {
+    const value = this.storage.getItem(key);
+    return value;
+  }
+
+  setItem(key: string, value: string): void {
+    this.storage.setItem(key, value);
+  }
+
+  removeItem(key: string): void {
+    this.storage.removeItem(key);
+  }
+
+  get length(): number | undefined {
+    return this.storage.length;
+  }
+
+  key(index: number): string | null {
+    return this.storage.key ? this.storage.key(index) : null;
+  }
+
+  clear(): void {
+    if (this.storage.clear) {
+      this.storage.clear();
+    } else {
+      for (let i = 0; i < this.length!; i++) {
+        const key = this.key(i);
+        if (key) {
+          this.removeItem(key);
+        }
+      }
+    }
+  }
 }

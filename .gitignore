@@ -6,6 +6,7 @@
 .turbo/
 **/dist/
 **/server/
+**/.wrangler/
 
 # Development
 node_modules

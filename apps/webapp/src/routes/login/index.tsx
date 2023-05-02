@@ -9,8 +9,8 @@ import { LoginHero } from "~/components/icons/login-hero";
 export const useSigninAction = routeAction$(
   async (data, { cookie, fail, redirect, env }) => {
     try {
-      const baseUrl = env.get("VITE_API_URL") as string;
-      const result = await signIn(data, cookie, `${baseUrl}`);
+      const appId = env.get("VITE_APPLICTION_ID") as string;
+      const result = await signIn(data, cookie, appId);
       if (result instanceof Error) {
         return fail(403, {
           message: "Invalid username or password",
@@ -97,10 +97,16 @@ export default component$(() => {
             styles="mt-8 w-full bg-primary"
           />
           <div class="flex justify-between pt-6 text-sm text-zinc-800 dark:text-zinc-200">
-            <Link href="/login" class="transition hover:text-primary dark:hover:text-light">
+            <Link
+              href="/login"
+              class="transition hover:text-primary dark:hover:text-light"
+            >
               Reset Password
             </Link>
-            <Link href="/register" class="transition hover:text-primary dark:hover:text-light">
+            <Link
+              href="/register"
+              class="transition hover:text-primary dark:hover:text-light"
+            >
               Register
             </Link>
           </div>

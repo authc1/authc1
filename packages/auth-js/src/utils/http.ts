@@ -4,10 +4,17 @@ interface HttpResponse<T> {
   statusText: string;
 }
 
-export async function get<T>(url: string): Promise<HttpResponse<T>> {
+export async function get<T>(url: string, token?: string): Promise<HttpResponse<T>> {
+  const headers: { [key: string]: string } = {
+    "Content-Type": "application/json"
+  };
+  if (token) {
+    headers.Authorization = "Bearer " + token;
+  }
+  
   const response = await fetch(url, {
     method: "GET",
-    headers: { "Content-Type": "application/json" },
+    headers: headers,
   });
   const data = await response.json();
   return { data, status: response.status, statusText: response.statusText };
@@ -15,12 +22,20 @@ export async function get<T>(url: string): Promise<HttpResponse<T>> {
 
 export async function post<T>(
   url: string,
-  data: any
+  data: any,
+  token?: string
 ): Promise<HttpResponse<T>> {
+  const headers: { [key: string]: string } = {
+    "Content-Type": "application/json"
+  };
+  if (token) {
+    headers.Authorization = "Bearer " + token;
+  }
+  
   const response = await fetch(url, {
     method: "POST",
-    headers: { "Content-Type": "application/json" },
-    body: JSON.stringify(data),
+    headers: headers,
+    body: data ? JSON.stringify(data) : undefined,
   });
   const responseData = await response.json();
   return {

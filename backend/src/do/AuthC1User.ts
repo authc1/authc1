@@ -253,7 +253,6 @@ export class AuthC1User implements DurableObject {
     this.app.patch("/sessions/:sessionId", async (c: Context) => {
       const sessionId = c.req.param("sessionId");
       const sessionData = (await c.req.json()) as Partial<SessionData>;
-      console.log(sessionId, this.sessions[sessionId]);
       if (!this.sessions[sessionId]) {
         return c.json({
           message: "Session not found",

@@ -8,9 +8,9 @@ import { verify, confirm, refreshAndSaveAccessToken } from "~/utils/auth";
 import type { ErrorResponse } from "~/utils/fetch";
 
 export const useSendCodeAction = routeAction$(async (data, { cookie, env }) => {
-  const baseUrl = env.get("VITE_API_URL") as string;
-  const result = await verify(cookie, baseUrl);
-  if ((result as ErrorResponse).error) {
+  const appId = env.get("VITE_APPLICTION_ID") as string;
+  const result = await verify(cookie, appId);
+  if ((result as ErrorResponse)?.error) {
     const { error } = result as ErrorResponse;
     return {
       suceess: false,
@@ -25,15 +25,15 @@ export const useSendCodeAction = routeAction$(async (data, { cookie, env }) => {
 
 export const useConfirmCodeAction = routeAction$(
   async (data, { cookie, fail, redirect, env }) => {
-    const baseUrl = env.get("VITE_API_URL") as string;
-    const result = await confirm(data, cookie, baseUrl);
+    const appId = env.get("VITE_APPLICTION_ID") as string;
+    const result = await confirm(data, cookie, appId);
     if ((result as ErrorResponse).error) {
       const { error } = result as ErrorResponse;
       return fail(403, {
         message: error?.message,
       });
     }
-    await refreshAndSaveAccessToken(cookie, baseUrl);
+    await refreshAndSaveAccessToken(cookie, appId);
     throw redirect(302, "/");
   },
   zod$({

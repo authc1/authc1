@@ -1,4 +1,4 @@
-import { getItem } from "./storage";
+import { StorageManager } from "./storage";
 
 enum AuthEvent {
   SIGNED_IN = "signed_in",
@@ -33,15 +33,23 @@ type EventHandler = (...args: any[]) => void;
 class EventEmitter {
   private events: Map<AuthEvent, EventHandler[]> = new Map();
   private appId: string;
+  private storageManager: StorageManager;
 
-  constructor(appId: string) {
+  constructor(
+    appId: string,
+    storageManager: StorageManager,
+    sessionKey: string
+  ) {
     this.events = new Map<AuthEvent, EventHandler[]>();
     this.appId = appId;
-    const sessionKey = `authc1-${this.appId}-session`;
-    const session = getItem(sessionKey);
+    this.storageManager = storageManager;
 
+    const session = this.storageManager.getItem(sessionKey);
     if (session) {
-      const event = session.token ? AuthEvent.SIGNED_IN : AuthEvent.SIGNED_OUT;
+      const sessionData = JSON.parse(session);
+      const event = sessionData.access_token
+        ? AuthEvent.SIGNED_IN
+        : AuthEvent.SIGNED_OUT;
       this.emit(event, session);
     }
   }
