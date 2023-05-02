@@ -126,9 +126,9 @@ export class Authc1Client {
     }
   }
 
-  public async setSession(session: Session): Promise<void> {
+  public setSession(session: Session): void {
     try {
-      await this.storage.setItem(this.sessionKey, JSON.stringify(session));
+      this.storage.setItem(this.sessionKey, JSON.stringify(session));
     } catch (err) {
       throw err;
     }
@@ -162,5 +162,22 @@ export class Authc1Client {
       throw err;
     }
     return;
+  }
+
+  public async refreshAccessToken(refreshToken: string): Promise<Session> {
+    const data = {
+      refresh_token: refreshToken,
+    };
+    const response = await post("/accounts/access-token", data);
+    const session: Session = {
+      accessToken: response.data.access_token,
+      refreshToken: response.data.refresh_token,
+      expiresIn: response.data.expires_in,
+      localId: response.data.local_id,
+      expiresAt: response.data.expires_at,
+      emailVerified: response.data.email_verified,
+    };
+    await this.setSession(session);
+    return session;
   }
 }

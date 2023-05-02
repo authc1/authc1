@@ -153,7 +153,7 @@ export async function refreshAndSaveAccessToken(
   cookie: Cookie,
   appId: string,
 ): Promise<AuthState | null> {
-  const authState = await getAccessTokenFromCookie(cookie, appId);
+  const authState = getAccessTokenFromCookie(cookie, appId);
   const refreshToken = authState.refresh_token;
   try {
     const body = {
