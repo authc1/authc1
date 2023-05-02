@@ -13,7 +13,8 @@ interface Application {
 export const createApplication = async (
   { name }: Application,
   cookie: Cookie,
-  baseUrl: string
+  baseUrl: string,
+  appId: string
 ): Promise<any | null> => {
   try {
     const data: any = await callApi(
@@ -25,7 +26,8 @@ export const createApplication = async (
         },
       },
       baseUrl,
-      cookie
+      appId,
+      cookie,
     );
     return data;
   } catch (e: any) {
@@ -38,7 +40,8 @@ export const updateApplicationProviderById = async (
   providers: any,
   id: string,
   cookie: Cookie,
-  baseUrl: string
+  baseUrl: string,
+  appId: string
 ): Promise<any | null> => {
   try {
     const data: any = await callApi(
@@ -48,6 +51,7 @@ export const updateApplicationProviderById = async (
         body: providers,
       },
       baseUrl,
+      appId,
       cookie
     );
     return data;
@@ -61,7 +65,8 @@ export const updateApplicationById = async (
   updates: any,
   id: string,
   cookie: Cookie,
-  baseUrl: string
+  baseUrl: string,
+  appId: string
 ): Promise<any | null> => {
   try {
     const keys = Object.keys(
@@ -92,6 +97,7 @@ export const updateApplicationById = async (
         body: data,
       },
       baseUrl,
+      appId,
       cookie
     );
 
@@ -104,7 +110,8 @@ export const updateApplicationById = async (
 
 export const getAllApplicationForListingByUser = async (
   cookie: Cookie,
-  baseUrl: string
+  baseUrl: string,
+  appId: string,
 ): Promise<any> => {
   const data: any = await callApi(
     {
@@ -112,6 +119,7 @@ export const getAllApplicationForListingByUser = async (
       method: "GET",
     },
     baseUrl,
+    appId,
     cookie
   );
   return data;
@@ -120,6 +128,7 @@ export const getAllApplicationForListingByUser = async (
 export const getAllApplicationsById = async (
   cookie: Cookie,
   baseUrl: string,
+  appId: string,
   id: string
 ): Promise<any> => {
   const data: any = await callApi(
@@ -128,6 +137,7 @@ export const getAllApplicationsById = async (
       method: "GET",
     },
     baseUrl,
+    appId,
     cookie
   );
   return data;
@@ -136,6 +146,7 @@ export const getAllApplicationsById = async (
 export const getAllApplicationsProvidersById = async (
   cookie: Cookie,
   baseUrl: string,
+  appId: string,
   id: string
 ): Promise<any> => {
   const data: any = await callApi(
@@ -144,6 +155,7 @@ export const getAllApplicationsProvidersById = async (
       method: "GET",
     },
     baseUrl,
+    appId,
     cookie
   );
   return data;

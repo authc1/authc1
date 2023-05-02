@@ -15,8 +15,9 @@ const shouldRedirect = (pathname: string, excludedPaths: string[]): boolean => {
 };
 
 export const userAuthStateLoader = routeLoader$(
-  ({ cookie, cacheControl, redirect, pathname }) => {
-    const authState = getAccessTokenFromCookie(cookie);
+  ({ cookie, cacheControl, redirect, pathname, env }) => {
+    const appId = env.get("VITE_APPLICTION_ID") as string;
+    const authState = getAccessTokenFromCookie(cookie, appId);
     if (authState?.access_token) {
       const decodedToken = decodeAccessToken(authState?.access_token);
 

@@ -2,12 +2,21 @@
   "name": "@authc1/auth-js",
   "private": true,
   "version": "0.0.0",
+  "type": "module",
   "description": "",
-  "main": "index.js",
+  "main": "dist/index.js",
+  "module": "dist/index.js",
+  "types": "dist/index.d.ts",
   "scripts": {
-    "build": "tsup src --target esnext --dts",
+    "build": "tsc --build",
     "dev": "echo 'No build script for this package'",
     "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "exports": {
+    ".": {
+      "require": "./dist/index.js",
+      "import": "./dist/index.js"
+    }
   },
   "keywords": [],
   "author": "",

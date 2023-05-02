@@ -1,6 +1,6 @@
 import { AuthEvent, EventEmitter } from "../utils/events";
 import { post } from "../utils/http";
-import * as storage from "../utils/storage";
+import { StorageManager } from "../utils/storage";
 
 export interface LoginResult {
   access_token: string;
@@ -11,12 +11,15 @@ export interface LoginResult {
   local_id: string;
   name?: string;
   session_id: string;
+  email_verified?: boolean;
 }
 
 export interface Session {
   accessToken: string;
   refreshToken: string;
   expiresIn: number;
+  expiresAt: number;
+  emailVerified: boolean;
   localId: string;
 }
 
@@ -28,35 +31,55 @@ export interface RegisterResult {
   expires_at: number;
   local_id: string;
   name?: string;
+  email_verified?: string;
 }
 
 type AuthCallback<T> = (error: Error | null, result?: T) => void;
+
+export interface EmailAuthClientOptions {
+  appId: string;
+  endpoint: string;
+  eventEmitter: EventEmitter;
+  storage: StorageManager;
+  sessionKey: string;
+}
 
 export class EmailAuthClient {
   private readonly endpoint: string;
   private readonly eventEmitter: EventEmitter;
   private readonly sessionKey: string;
-  private sessionId?: string;
+  private session?: Session;
+  private storage: StorageManager;
 
-  constructor(appId: string, endpoint: string, eventEmitter: EventEmitter) {
-    this.endpoint = endpoint;
-    this.eventEmitter = eventEmitter;
-    this.sessionKey = `authc1-${appId}-session`;
-    this.sessionId = storage.getItem(this.sessionKey);
+  constructor(options: EmailAuthClientOptions) {
+    this.endpoint = options.endpoint;
+    this.eventEmitter = options.eventEmitter;
+    this.sessionKey = options.sessionKey;
+    const sessionData = options.storage.getItem(options.sessionKey);
+    if (sessionData) {
+      const parsedSession = JSON.parse(sessionData);
+      this.session = parsedSession;
+    }
+
+    this.storage = options.storage;
   }
 
-  private setSessionId(sessionId: string) {
-    this.sessionId = sessionId;
-    storage.setItem(this.sessionKey, sessionId);
+  private setSession(session: Session) {
+    this.session = session;
+    this.storage.setItem(this.sessionKey, JSON.stringify(session));
   }
 
-  public getSessionId(): string {
-    return this.sessionId;
+  public getSession(): Session | null {
+    const sessionData = this.storage.getItem(this.sessionKey);
+    if (sessionData) {
+      return JSON.parse(sessionData);
+    }
+    return null;
   }
 
-  private clearSessionId() {
-    this.sessionId = undefined;
-    storage.removeItem(this.sessionKey);
+  private clearSession() {
+    this.session = undefined;
+    this.storage.removeItem(this.sessionKey);
   }
 
   public async login(
@@ -64,11 +87,19 @@ export class EmailAuthClient {
     password: string,
     callback?: AuthCallback<LoginResult>
   ): Promise<LoginResult> {
-    const url = `${this.endpoint}/login`;
+    const url = `${this.endpoint}/email/login`;
     const response = await post(url, { email, password });
     if (response.status === 200) {
       const result = response.data as LoginResult;
-      this.setSessionId(result.session_id);
+      const session: Session = {
+        accessToken: result.access_token,
+        refreshToken: result.refresh_token,
+        expiresIn: result.expires_in,
+        localId: result.local_id,
+        expiresAt: result.expires_at,
+        emailVerified: result.email_verified,
+      };
+      this.setSession(session);
       this.eventEmitter.emit(AuthEvent.SIGNED_IN, {
         userId: result.local_id,
         session: result.session_id,
@@ -91,7 +122,7 @@ export class EmailAuthClient {
     password: string,
     callback?: AuthCallback<RegisterResult>
   ): Promise<RegisterResult> {
-    const url = `${this.endpoint}/register`;
+    const url = `${this.endpoint}/email/register`;
     const response = await post(url, { email, password });
     if (response.status === 200) {
       const result = response.data as RegisterResult;
@@ -109,11 +140,11 @@ export class EmailAuthClient {
   }
 
   public async sendVerificationEmail(
-    email: string,
     callback?: AuthCallback<any>
   ): Promise<any> {
-    const url = `${this.endpoint}/email/send-verification`;
-    const response = await post(url, { email });
+    const url = `${this.endpoint}/email/verify`;
+    console.log("this.session", this.session);
+    const response = await post(url, null, this.session.accessToken);
     if (response.status === 200) {
       const result = response.data;
       if (callback) {
@@ -130,12 +161,11 @@ export class EmailAuthClient {
   }
 
   public async confirmEmail(
-    email: string,
-    otp: string,
+    code: string,
     callback?: AuthCallback<any>
   ): Promise<any> {
     const url = `${this.endpoint}/email/confirm`;
-    const response = await post(url, { email, otp });
+    const response = await post(url, { code });
     if (response.status === 200) {
       const result = response.data;
       if (callback) {
@@ -152,7 +182,7 @@ export class EmailAuthClient {
   }
 
   public async logout(callback?: AuthCallback<any>): Promise<any> {
-    this.clearSessionId();
+    this.clearSession();
     this.eventEmitter.emit(AuthEvent.SIGNED_OUT);
     if (callback) {
       callback(null);

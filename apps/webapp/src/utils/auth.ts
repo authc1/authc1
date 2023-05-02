@@ -6,6 +6,9 @@ import { callApi } from "./fetch";
 import type { JwtUser } from "~/types";
 export const AUTHTOKEN_NAME: string = "fugit.app:user";
 
+import type { Session } from "@authc1/auth-js";
+import { createAuthc1Client } from "./authc1-client";
+
 export const isUserAuthenticated = async (cookie: Cookie) => {
   return cookie.has(AUTHTOKEN_NAME);
 };
@@ -28,32 +31,14 @@ interface EmailConfirm {
 export const signIn = async (
   { email, password }: EmailAuth,
   cookie: Cookie,
-  baseUrl: string
-): Promise<JwtPayloadToUser | ErrorResponse> => {
+  appId: string
+): Promise<Session | ErrorResponse> => {
   try {
-    const data: any = await callApi(
-      {
-        endpoint: "/email/login",
-        method: "POST",
-        body: {
-          email,
-          password,
-        },
-      },
-      baseUrl
-    );
-
-    if (!data.error) {
-      cookie.set(AUTHTOKEN_NAME, JSON.stringify(data), {
-        httpOnly: true,
-        maxAge: [data.expires_in, "seconds"],
-        path: "/",
-      });
-      return data;
-    }
-
-    throw new Error(data?.message);
+    const client = createAuthc1Client(cookie, appId);
+    const data = await client.signInWithEmail(email, password);
+    return data;
   } catch (e: any) {
+    console.log(e);
     return e;
   }
 };
@@ -61,7 +46,8 @@ export const signIn = async (
 export const register = async (
   { name, email, password }: EmailAuth,
   cookie: Cookie,
-  baseUrl: string
+  baseUrl: string,
+  appId: string,
 ): Promise<JwtPayloadToUser | ErrorResponse> => {
   try {
     const data: any = await callApi(
@@ -74,7 +60,8 @@ export const register = async (
           password,
         },
       },
-      baseUrl
+      baseUrl,
+      appId
     );
 
     if (!data.error) {
@@ -94,17 +81,11 @@ export const register = async (
 
 export const verify = async (
   cookie: Cookie,
-  baseUrl: string
-): Promise<JwtPayloadToUser | ErrorResponse> => {
+  appId: string,
+): Promise<void | ErrorResponse> => {
   try {
-    const data: any = await callApi(
-      {
-        endpoint: "/email/verify",
-        method: "POST",
-      },
-      baseUrl,
-      cookie
-    );
+    const client = createAuthc1Client(cookie, appId);
+    const data = await client.sendEmailVerification();
     return data;
   } catch (e: any) {
     return e;
@@ -114,20 +95,11 @@ export const verify = async (
 export const confirm = async (
   { code }: EmailConfirm,
   cookie: Cookie,
-  baseUrl: string
-): Promise<JwtPayloadToUser | ErrorResponse> => {
+  appId: string,
+): Promise<void | ErrorResponse> => {
   try {
-    const data: any = await callApi(
-      {
-        endpoint: "/email/confirm",
-        method: "POST",
-        body: {
-          code,
-        },
-      },
-      baseUrl,
-      cookie
-    );
+    const client = createAuthc1Client(cookie, appId);
+    const data = await client.confirmEmailWithOtp(code);
     return data;
   } catch (e: any) {
     return e;
@@ -152,7 +124,8 @@ export interface JwtPayloadToUser {
 
 export async function refreshAccessToken(
   authState: AuthState,
-  baseUrl: string
+  baseUrl: string,
+  appId: string,
 ): Promise<AuthState | null> {
   const refreshToken = authState.refresh_token;
 
@@ -166,7 +139,8 @@ export async function refreshAccessToken(
         method: "POST",
         body,
       },
-      baseUrl
+      baseUrl,
+      appId
     );
     return responseData?.data as AuthState;
   } catch (error) {
@@ -177,9 +151,9 @@ export async function refreshAccessToken(
 
 export async function refreshAndSaveAccessToken(
   cookie: Cookie,
-  baseUrl: string
+  appId: string,
 ): Promise<AuthState | null> {
-  const authState = await getAccessTokenFromCookie(cookie);
+  const authState = await getAccessTokenFromCookie(cookie, appId);
   const refreshToken = authState.refresh_token;
   try {
     const body = {
@@ -192,7 +166,8 @@ export async function refreshAndSaveAccessToken(
         method: "POST",
         body,
       },
-      baseUrl
+      baseUrl,
+      appId
     );
 
     const tokenData: AuthState = responseData?.data;
