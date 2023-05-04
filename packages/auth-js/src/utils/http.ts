@@ -1,8 +1,5 @@
-interface HttpResponse<T> {
-  data: T;
-  status: number;
-  statusText: string;
-}
+import { HttpResponse } from "../types";
+
 
 export async function get<T>(url: string, token?: string): Promise<HttpResponse<T>> {
   const headers: { [key: string]: string } = {

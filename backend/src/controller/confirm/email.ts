@@ -41,7 +41,7 @@ export const confirmEmailControllerByCode = async (c: Context) => {
     const stub = c.env.AuthC1User.get(userObjId);
     const userClient = new UserClient(stub);
 
-    await Promise.all([
+    const promises = await Promise.all([
       userClient.verifyEmailCodeAndUpdate(
         user.session_id as string,
         code,
@@ -55,7 +55,15 @@ export const confirmEmailControllerByCode = async (c: Context) => {
       }),
     ]);
 
+    const [authDetails] = promises;
+
     return c.json({
+      access_token: authDetails?.accessToken,
+      refresh_token: authDetails?.refreshToken,
+      expires_in: applicationInfo.settings.expires_in,
+      expires_at:
+        Math.floor(Date.now() / 1000) + applicationInfo.settings.expires_in,
+      name: user?.name,
       local_id: user.id,
       email: user.email,
     });

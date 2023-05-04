@@ -8,6 +8,7 @@ export const AUTHTOKEN_NAME: string = "fugit.app:user";
 
 import type { Session } from "@authc1/auth-js";
 import { createAuthc1Client } from "./authc1-client";
+import type { LoginRequest, RegisterRequest } from "@authc1/auth-js/src/types";
 
 export const isUserAuthenticated = async (cookie: Cookie) => {
   return cookie.has(AUTHTOKEN_NAME);
@@ -18,24 +19,18 @@ export function decodeAccessToken(token: string): JwtUser {
   return payload as JwtUser;
 }
 
-interface EmailAuth {
-  name?: string;
-  email: string;
-  password: string;
-}
-
 interface EmailConfirm {
   code: string;
 }
 
 export const signIn = async (
-  { email, password }: EmailAuth,
+  { email, password }: LoginRequest,
   cookie: Cookie,
   appId: string
 ): Promise<Session | ErrorResponse> => {
   try {
     const client = createAuthc1Client(cookie, appId);
-    const data = await client.signInWithEmail(email, password);
+    const data = await client.signInWithEmail({ email, password });
     return data;
   } catch (e: any) {
     console.log(e);
@@ -44,36 +39,14 @@ export const signIn = async (
 };
 
 export const register = async (
-  { name, email, password }: EmailAuth,
+  { name, email, password }: RegisterRequest,
   cookie: Cookie,
-  baseUrl: string,
-  appId: string,
-): Promise<JwtPayloadToUser | ErrorResponse> => {
+  appId: string
+): Promise<Session | ErrorResponse> => {
   try {
-    const data: any = await callApi(
-      {
-        endpoint: "/register/email",
-        method: "POST",
-        body: {
-          name,
-          email,
-          password,
-        },
-      },
-      baseUrl,
-      appId
-    );
-
-    if (!data.error) {
-      cookie.set(AUTHTOKEN_NAME, JSON.stringify(data), {
-        httpOnly: true,
-        maxAge: [data.expires_in, "seconds"],
-        path: "/",
-      });
-      return data;
-    }
-
-    throw new Error(data?.message);
+    const client = createAuthc1Client(cookie, appId);
+    const data = await client.registerWithEmail({ name, email, password });
+    return data;
   } catch (e: any) {
     return e;
   }
@@ -81,7 +54,7 @@ export const register = async (
 
 export const verify = async (
   cookie: Cookie,
-  appId: string,
+  appId: string
 ): Promise<void | ErrorResponse> => {
   try {
     const client = createAuthc1Client(cookie, appId);
@@ -95,19 +68,22 @@ export const verify = async (
 export const confirm = async (
   { code }: EmailConfirm,
   cookie: Cookie,
-  appId: string,
+  appId: string
 ): Promise<void | ErrorResponse> => {
   try {
     const client = createAuthc1Client(cookie, appId);
     const data = await client.confirmEmailWithOtp(code);
+    await client.refreshAccessToken();
     return data;
   } catch (e: any) {
+    console.log(e);
     return e;
   }
 };
 
-export const signOut = async (cookie: Cookie) => {
-  await cookie.delete(AUTHTOKEN_NAME, { path: "/" });
+export const signOut = async (cookie: Cookie, appId: string) => {
+  const client = createAuthc1Client(cookie, appId);
+  await client.logout();
   return null;
 };
 
@@ -122,36 +98,9 @@ export interface JwtPayloadToUser {
   sign_in_provider: string;
 }
 
-export async function refreshAccessToken(
-  authState: AuthState,
-  baseUrl: string,
-  appId: string,
-): Promise<AuthState | null> {
-  const refreshToken = authState.refresh_token;
-
-  try {
-    const body = {
-      refresh_token: refreshToken,
-    };
-    const responseData: any = await callApi(
-      {
-        endpoint: "/accounts/access-token",
-        method: "POST",
-        body,
-      },
-      baseUrl,
-      appId
-    );
-    return responseData?.data as AuthState;
-  } catch (error) {
-    console.error("Error refreshing access token:", error);
-    return null;
-  }
-}
-
 export async function refreshAndSaveAccessToken(
   cookie: Cookie,
-  appId: string,
+  appId: string
 ): Promise<AuthState | null> {
   const authState = getAccessTokenFromCookie(cookie, appId);
   const refreshToken = authState.refresh_token;
@@ -166,7 +115,7 @@ export async function refreshAndSaveAccessToken(
         method: "POST",
         body,
       },
-      baseUrl,
+      appId,
       appId
     );
 

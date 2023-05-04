@@ -42,7 +42,7 @@ export class AuthC1Token implements DurableObject {
     });
 
     this.app.post("/", async (c: Context) => {
-      const { accessToken, userId, refreshToken, accountId } =
+      const { accessToken, userId, refreshToken, accountId, sessionId } =
         await c.req.json();
       await this.state.storage?.put("tokens", {
         accountId,
@@ -50,6 +50,7 @@ export class AuthC1Token implements DurableObject {
         refreshToken,
         created_at: new Date().toISOString(),
         userId,
+        sessionId,
       });
       return c.json({
         accessToken,

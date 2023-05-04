@@ -62,7 +62,7 @@ export async function callApi<T>(
       const cookieData = getAccessTokenFromCookie(cookie, appId);
       const currentTime = Math.floor(Date.now() / 1000);
       if (cookieData?.expires_at < currentTime) {
-        const authState = await refreshAndSaveAccessToken(cookie, baseUrl, appId);
+        const authState = await refreshAndSaveAccessToken(cookie, appId);
         if (!authState) {
           throw new Error("Unable to refresh access token.");
         }

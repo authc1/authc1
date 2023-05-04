@@ -213,8 +213,10 @@ export class AuthC1User implements DurableObject {
         created_at: new Date().toISOString(),
       };
 
-      this.sessions[sessionId] = sessionData;
+      console.log("sessionData-------*************", sessionData);
 
+      this.sessions[sessionId] = sessionData;
+      console.log("sessionData-------*************", this.sessions);
       /* const appId = c.env.AuthC1App.idFromName(appSettings.id);
       const applicationObj = c.env.AuthC1App.get(appId);
       const appClient = new ApplicationClient(applicationObj, c); */
@@ -316,7 +318,9 @@ export class AuthC1User implements DurableObject {
         userData: this.userData,
         sessions: this.sessions,
       });
-      return c.json({ access_token: accessToken });
+      return c.json({
+        ...newSession,
+      });
     });
 
     this.app.patch("/reset/:sessionId", async (c: Context) => {
@@ -369,6 +373,7 @@ export class AuthC1User implements DurableObject {
 
     this.app.post("/refresh", async (c: Context) => {
       const { sessionId, appSettings } = await c.req.json();
+      console.log("sessionId-------------", this.sessions, sessionId);
       const sessionData = this.sessions[sessionId];
 
       if (!sessionData) {
@@ -392,6 +397,8 @@ export class AuthC1User implements DurableObject {
         sessionId,
         name: userName,
       });
+
+      console.log("refresh accessToken--------", accessToken);
 
       this.sessions = {
         ...this.sessions,
@@ -441,20 +448,21 @@ export class AuthC1User implements DurableObject {
 
   async clearSessionsByExpiration() {
     const allSessions = await this.sessions;
-    const now = new Date().getTime();
     const filteredSessions: Record<string, SessionData> = {};
     Object.entries(allSessions).forEach(([sessionId, sessionData]) => {
-      const sessionExpirationTime = new Date(sessionData.created_at).getTime();
-      if (sessionExpirationTime >= now) {
+      if ((sessionData.expirationTimestamp as number) < Date.now() / 1000) {
         filteredSessions[sessionId] = sessionData;
       }
     });
     this.sessions = filteredSessions;
-    await this.state.storage?.put("sessions", this.sessions);
+    await this.state.storage?.put({
+      sessions: this.sessions,
+    });
+    this.state.storage.setAlarm(Date.now() + 24 * 60 * 60 * 1000);
   }
 
   async alarm() {
-    await this.clearSessionsByExpiration();
+    // await this.clearSessionsByExpiration();
   }
 }
 
@@ -584,6 +592,7 @@ export class UserClient {
       }),
     });
     const data: AuthResponse = await res.json();
+    console.log("refreshToken++++++++++++++++++", data);
     return data;
   }
 }

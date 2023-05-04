@@ -89,7 +89,7 @@ export default component$(() => {
             spaReset
           >
             <h1 class="text-3xl font-medium text-zinc-800 dark:text-zinc-100">
-              Verify and let's get started!
+              Reset Password and Regain Access!
             </h1>
             <Button
               isRunning={sendAction.isRunning}

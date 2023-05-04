@@ -1,48 +1,15 @@
 import { AuthEvent, EventEmitter } from "../utils/events";
 import { post } from "../utils/http";
-import { StorageManager } from "../utils/storage";
-
-export interface LoginResult {
-  access_token: string;
-  email: string;
-  refresh_token: string;
-  expires_in: number;
-  expires_at: number;
-  local_id: string;
-  name?: string;
-  session_id: string;
-  email_verified?: boolean;
-}
-
-export interface Session {
-  accessToken: string;
-  refreshToken: string;
-  expiresIn: number;
-  expiresAt: number;
-  emailVerified: boolean;
-  localId: string;
-}
-
-export interface RegisterResult {
-  access_token: string;
-  email: string;
-  refresh_token: string;
-  expires_in: number;
-  expires_at: number;
-  local_id: string;
-  name?: string;
-  email_verified?: string;
-}
-
-type AuthCallback<T> = (error: Error | null, result?: T) => void;
-
-export interface EmailAuthClientOptions {
-  appId: string;
-  endpoint: string;
-  eventEmitter: EventEmitter;
-  storage: StorageManager;
-  sessionKey: string;
-}
+import type {
+  AuthCallback,
+  EmailAuthClientOptions,
+  LoginRequest,
+  LoginResult,
+  RegisterRequest,
+  RegisterResult,
+  Session,
+} from "../types";
+import type { StorageManager } from "../utils/storage";
 
 export class EmailAuthClient {
   private readonly endpoint: string;
@@ -77,14 +44,8 @@ export class EmailAuthClient {
     return null;
   }
 
-  private clearSession() {
-    this.session = undefined;
-    this.storage.removeItem(this.sessionKey);
-  }
-
   public async login(
-    email: string,
-    password: string,
+    { email, password }: LoginRequest,
     callback?: AuthCallback<LoginResult>
   ): Promise<LoginResult> {
     const url = `${this.endpoint}/email/login`;
@@ -118,12 +79,11 @@ export class EmailAuthClient {
   }
 
   public async register(
-    email: string,
-    password: string,
+    { name, email, password }: RegisterRequest,
     callback?: AuthCallback<RegisterResult>
   ): Promise<RegisterResult> {
     const url = `${this.endpoint}/email/register`;
-    const response = await post(url, { email, password });
+    const response = await post(url, { email, password, name });
     if (response.status === 200) {
       const result = response.data as RegisterResult;
       if (callback) {
@@ -143,7 +103,6 @@ export class EmailAuthClient {
     callback?: AuthCallback<any>
   ): Promise<any> {
     const url = `${this.endpoint}/email/verify`;
-    console.log("this.session", this.session);
     const response = await post(url, null, this.session.accessToken);
     if (response.status === 200) {
       const result = response.data;
@@ -165,7 +124,7 @@ export class EmailAuthClient {
     callback?: AuthCallback<any>
   ): Promise<any> {
     const url = `${this.endpoint}/email/confirm`;
-    const response = await post(url, { code });
+    const response = await post(url, { code }, this.session.accessToken);
     if (response.status === 200) {
       const result = response.data;
       if (callback) {
@@ -179,14 +138,5 @@ export class EmailAuthClient {
       }
       throw err;
     }
-  }
-
-  public async logout(callback?: AuthCallback<any>): Promise<any> {
-    this.clearSession();
-    this.eventEmitter.emit(AuthEvent.SIGNED_OUT);
-    if (callback) {
-      callback(null);
-    }
-    return null;
   }
 }

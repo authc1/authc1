@@ -15,7 +15,6 @@ export function authenticateApplication(id?: string): MiddlewareHandler {
     const applicationObj = c.env.AuthC1App.get(id);
     const applicationClient = new ApplicationClient(applicationObj);
     const data = await applicationClient.get();
-    console.log("data", data);
     if (!data.id) {
       return setUnauthorizedResponse(c);
     }

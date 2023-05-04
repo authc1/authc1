@@ -57,9 +57,10 @@ export const userAuthStateLoader = routeLoader$(
 );
 
 export const useLogoutAction = routeAction$(
-  async (data, { cookie, redirect, fail }) => {
+  async (data, { cookie, redirect, fail, env }) => {
     try {
-      await signOut(cookie);
+      const appId = env.get("VITE_APPLICTION_ID") as string;
+      await signOut(cookie, appId);
       throw redirect(302, "/login");
     } catch (e) {
       return fail(403, {

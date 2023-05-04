@@ -98,7 +98,7 @@ export default component$(() => {
           />
           <div class="flex justify-between pt-6 text-sm text-zinc-800 dark:text-zinc-200">
             <Link
-              href="/login"
+              href="/reset"
               class="transition hover:text-primary dark:hover:text-light"
             >
               Reset Password
