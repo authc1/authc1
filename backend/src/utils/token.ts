@@ -92,7 +92,7 @@ export async function getUserFromToken(
   secret: string
 ): Promise<UserFromTokenResult> {
   const authorization = c.req.headers.get("Authorization");
-  console.log("authorization", authorization);
+  console.log("authorization getUserFromToken", authorization);
   if (!authorization) {
     return setUnauthorizedResponse(c);
   }

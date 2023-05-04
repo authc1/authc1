@@ -35,13 +35,14 @@ export const updateAccessTokenByRefreshToken = async (c: Context) => {
     const tokenClient = new TokenClient(stub);
     const tokenInfo = await tokenClient.getToken();
 
+    console.log("tokenInfotokenInfo", tokenInfo);
     if (!tokenInfo?.userId) {
       return handleError(refreshTokenNotValidError, c);
     }
 
     const { expires_in: expiresIn } = settings;
 
-    const userObjId = c.env.AuthC1User.idFromName(tokenInfo.userId);
+    const userObjId = c.env.AuthC1User.idFromString(tokenInfo.userId);
     const userStub = c.env.AuthC1User.get(userObjId);
     const userClient = new UserClient(userStub);
     const { accessToken } = await userClient.refreshToken(
@@ -49,17 +50,15 @@ export const updateAccessTokenByRefreshToken = async (c: Context) => {
       applicationInfo
     );
 
-    const response: SuccessResponse = {
-      message: "Session updated successfully",
-      data: {
-        access_token: accessToken,
-        refresh_token: refreshToken,
-        expires_in: expiresIn,
-        expires_at:
-          Math.floor(Date.now() / 1000) + applicationInfo.settings.expires_in,
-      },
-    };
-    return handleSuccess(c, response);
+    console.log("accessToken----------", accessToken);
+
+    return c.json({
+      access_token: accessToken,
+      refresh_token: refreshToken,
+      expires_in: expiresIn,
+      expires_at:
+        Math.floor(Date.now() / 1000) + applicationInfo.settings.expires_in,
+    });
   } catch (err: any) {
     console.log(err);
 

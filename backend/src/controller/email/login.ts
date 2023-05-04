@@ -31,7 +31,7 @@ async function addRefreshToken(
   applicationId: string,
   userId: string
 ) {
-  console.log("adding refreshToken", refreshToken);
+  console.log("adding refreshToken", refreshToken, sessionId);
   const userObjId = c.env.AuthC1Token.idFromString(refreshToken);
   const stub = c.env.AuthC1Token.get(userObjId);
   const tokenClient = new TokenClient(stub);

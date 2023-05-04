@@ -18,8 +18,8 @@ const createCookieStorageManager = (cookie: Cookie): Storage => {
       return cookie.get(key)?.value as string;
     },
 
-    removeItem(key: string): void {
-      cookie.delete(key);
+    async removeItem(key: string): Promise<void> {
+      await cookie.delete(key, { path: "/" });
     },
     length: 0,
     key() {

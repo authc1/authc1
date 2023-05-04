@@ -15,7 +15,7 @@ export const useRegisterAction = routeAction$(
         message: "The password and confirm password fields must match.",
       });
     }
-    const baseUrl = env.get("VITE_API_URL") as string;
+    const appId = env.get("VITE_APPLICTION_ID") as string;
     const result = await register(
       {
         email,
@@ -23,9 +23,9 @@ export const useRegisterAction = routeAction$(
         name,
       },
       cookie,
-      baseUrl
+      appId
     );
-    if ((result as ErrorResponse).error) {
+    if ((result as ErrorResponse)?.error) {
       return fail(403, {
         message: (result as ErrorResponse)?.error?.message,
       });

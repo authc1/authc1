@@ -9,7 +9,6 @@ import {
   invalidPassword,
 } from "../../utils/error-responses";
 import { hash } from "../../utils/hash";
-import { generateUniqueIdWithPrefix } from "../../utils/string";
 import { ApplicationRequest } from "../applications/create";
 
 async function verifyPassword(
