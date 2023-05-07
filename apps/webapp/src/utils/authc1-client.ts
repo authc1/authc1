@@ -31,12 +31,13 @@ const createCookieStorageManager = (cookie: Cookie): Storage => {
 
 export function createAuthc1Client(
   cookie: Cookie,
-  appId: string
+  appId: string,
+  baseUrl: string
 ): Authc1Client {
   const customStorageManager = createCookieStorageManager(cookie);
 
   return new Authc1Client(appId, {
     storage: customStorageManager,
-    baseUrl: "http://127.0.0.1:8787/v1",
+    baseUrl,
   });
 }

@@ -18,6 +18,10 @@ import { VerifyPayload } from "../../../../middleware/jwt";
 import { ApplicationRequest } from "../../../applications/create";
 import { UserClient } from "../../../../do/AuthC1User";
 
+export const forgetPasswordSchema = z.object({
+  email: z.string().email(),
+});
+
 const sendVerificationEmail = async (
   c: Context,
   params: ISendVerificationEmailParams
@@ -39,14 +43,13 @@ const sendVerificationEmail = async (
   const body = emailTemplateBody.replace("{{code}}", code);
   return sendEmail(c, email, subject, body, senderEmail);
 };
-// TODO: Immediate
+
 const sendResetCodeController = async (c: Context) => {
   try {
-    const { email } = await c.req.valid();
-    const user = c.get("user");
+    const { email } = await c.req.valid("json");
     const applicationInfo = c.get("applicationInfo") as ApplicationRequest;
-    const { sessionId } = user;
 
+    console.log("applicationInfo", applicationInfo);
     const {
       email_verification_enabled: emailVerificationEnabled,
       email_verification_method: emailVerificationMethod,
@@ -61,23 +64,22 @@ const sendResetCodeController = async (c: Context) => {
     const emailVerificationCode = generateEmailVerificationCode();
 
     const key = `${applicationInfo?.id}:email:${email}`;
-    console.log("key", key);
+    console.log("key", key, emailVerificationCode);
 
     const userObjId = c.env.AuthC1User.idFromName(key);
     const stub = c.env.AuthC1User.get(userObjId);
     const userClient = new UserClient(stub);
 
     await Promise.all([
-      sendVerificationEmail(c, {
+      /* sendVerificationEmail(c, {
         email,
         emailVerificationMethod,
         emailTemplateBody,
         emailTemplateSubject,
         senderEmail,
         emailVerificationCode,
-        sessionId,
-      }),
-      userClient.updateSession(sessionId, {
+      }), */
+      userClient.updateUser({
         emailVerifyCode: emailVerificationCode,
         expirationTimestamp: Math.floor(Date.now() / 1000) + 180,
       }),

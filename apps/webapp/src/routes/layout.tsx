@@ -4,7 +4,7 @@ import Header from "~/components/Header";
 import { decodeAccessToken, signOut } from "~/utils/auth";
 import { getAccessTokenFromCookie } from "~/utils/fetch";
 
-const excludedPaths = ["/login", "/register", "/pricing"];
+const excludedPaths = ["/login", "/register", "/pricing", "/reset"];
 
 const shouldRedirect = (pathname: string, excludedPaths: string[]): boolean => {
   return (
@@ -60,7 +60,8 @@ export const useLogoutAction = routeAction$(
   async (data, { cookie, redirect, fail, env }) => {
     try {
       const appId = env.get("VITE_APPLICTION_ID") as string;
-      await signOut(cookie, appId);
+      const baseUrl = env.get("VITE_API_URL") as string;
+      await signOut(cookie, appId, baseUrl);
       throw redirect(302, "/login");
     } catch (e) {
       return fail(403, {

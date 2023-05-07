@@ -2,7 +2,11 @@ import { Context } from "hono";
 import { z } from "zod";
 import { TokenClient } from "../../do/AuthC1Token";
 import { UserClient } from "../../do/AuthC1User";
-import { handleError, userNotFound } from "../../utils/error-responses";
+import {
+  handleError,
+  invalidCredentials,
+  userNotFound,
+} from "../../utils/error-responses";
 
 import { generateUniqueIdWithPrefix } from "../../utils/string";
 import { createRefreshToken } from "../../utils/token";
@@ -68,7 +72,7 @@ export async function emailLoginController(c: Context) {
   );
 
   if (!passwordMatched) {
-    return new Response("Invalid password", { status: 401 });
+    return handleError(invalidCredentials, c);
   }
 
   const sessionId = generateUniqueIdWithPrefix();

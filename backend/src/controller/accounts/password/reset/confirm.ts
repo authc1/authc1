@@ -12,35 +12,19 @@ import { UserClient } from "../../../../do/AuthC1User";
 import { validatePassword } from "../../../email/register";
 
 export const confirmRestPasswordSchema = z.object({
+  email: z.string().trim(),
   code: z.string().trim(),
   password: z.string().trim(),
 });
 
-const sessionSchema = z.object({
-  id: z.string().optional(),
-  created_at: z.string().optional(),
-  user_id: z.string().optional(),
-  application_id: z.string().optional(),
-  name: z.string().optional(),
-  session_id: z.string().optional(),
-  metadata: z.string().optional(),
-  ip: z.string().optional(),
-  user_agent: z.string().optional(),
-  region: z.string().optional(),
-  expiration_timestamp: z.string().optional(),
-  email_verify_code: z.string().optional(),
-  phone_verify_code: z.string().optional(),
-});
-
-type SessionSchema = z.infer<typeof sessionSchema>;
 type ConfirmEmailPassword = z.infer<typeof confirmRestPasswordSchema>;
 
 const confirmEmailResetController = async (c: Context) => {
   try {
-    const { code, password }: ConfirmEmailPassword = await c.req.valid("json");
-    const user = c.get("user");
+    const { code, password, email }: ConfirmEmailPassword = await c.req.valid(
+      "json"
+    );
     const applicationInfo = c.get("applicationInfo") as ApplicationRequest;
-    const sessionId = user.sessionId as string;
 
     const { password_regex: passwordRegex } = applicationInfo.providerSettings;
 
@@ -50,7 +34,7 @@ const confirmEmailResetController = async (c: Context) => {
       return handleError(invalidPassword, c);
     }
 
-    const key = `${applicationInfo?.id}:email:${user?.email}`;
+    const key = `${applicationInfo?.id}:email:${email}`;
     console.log("key", key);
 
     const userObjId = c.env.AuthC1User.idFromName(key);
@@ -60,15 +44,15 @@ const confirmEmailResetController = async (c: Context) => {
     const session = await userClient.resetPassword(
       code,
       hashPassword,
-      applicationInfo,
-      sessionId
+      applicationInfo
     );
 
     if (!session) {
       return handleError(expiredOrInvalidCode, c);
     }
-
-    // await c.env.AUTHC1_USER_DETAILS.put(user?.id, salt);
+    return c.json({
+      email,
+    });
   } catch (err: any) {
     console.log(err);
   }

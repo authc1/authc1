@@ -21,6 +21,9 @@ export const schema = z.object({
   emailVerified: z.boolean().default(false),
   avatarUrl: z.string().optional(),
   providerUserId: z.string().optional(),
+  emailVerifyCode: z.string().optional(),
+  phoneVerifyCode: z.string().optional(),
+  expirationTimestamp: z.number().optional(),
   created_at: z.string().datetime().optional(),
   updated_at: z.string().datetime().optional(),
 });
@@ -37,9 +40,6 @@ export const sessionSchema = z.object({
   sessionId: z.string(),
   accessToken: z.string(),
   refreshToken: z.string(),
-  emailVerifyCode: z.string().optional(),
-  phoneVerifyCode: z.string().optional(),
-  expirationTimestamp: z.number().optional(),
   created_at: z.string().datetime(),
 });
 
@@ -167,13 +167,19 @@ export class AuthC1User implements DurableObject {
 
       this.apps[appData.id] = appData;
       await this.state.storage?.put("apps", this.apps);
-      await this.state.storage?.setAlarm(
-        Date.now() + appSettings.settings.session_expiration_time
-      );
 
       return c.json({
         id: this.userData.id,
       });
+    });
+
+    this.app.patch("/", async (c: Context) => {
+      const userData: UserData = await c.req.json();
+      this.userData = {
+        ...this.userData,
+        ...userData,
+      };
+      return c.json(this.userData || {});
     });
 
     this.app.get("/apps", async (c: Context) => {
@@ -272,24 +278,22 @@ export class AuthC1User implements DurableObject {
       });
     });
 
-    this.app.patch("/verify/:sessionId", async (c: Context) => {
-      const sessionId = c.req.param("sessionId");
+    this.app.patch("/verify", async (c: Context) => {
       const { emailVerifyCode, appSettings } = await c.req.json();
-
-      const session = this.sessions[sessionId];
-
       console.log(
         "session",
-        (session.expirationTimestamp as number) > Date.now() / 1000
+        (this.userData.expirationTimestamp as number) > Date.now() / 1000
       );
 
       if (
-        (session.expirationTimestamp as number) < Date.now() / 1000 ||
-        (session.emailVerifyCode as string) !== emailVerifyCode.toString()
+        (this.userData.expirationTimestamp as number) < Date.now() / 1000 ||
+        (this.userData.emailVerifyCode as string) !== emailVerifyCode.toString()
       ) {
         return handleError(expiredOrInvalidCode, c);
       }
 
+      const sessionId = generateUniqueIdWithPrefix();
+      const refreshToken = createRefreshToken(c);
       this.userData.emailVerified = true;
       const accessToken = await createAccessToken({
         userId: this.userData.id,
@@ -300,20 +304,19 @@ export class AuthC1User implements DurableObject {
         applicationId: appSettings.id as string,
         secret: appSettings.settings.secret,
         algorithm: appSettings.settings.algorithm,
-        sessionId: session.sessionId,
+        sessionId,
         name: this.userData.name,
       });
-
       const newSession = {
-        ...session,
+        sessionId,
         accessToken,
-        emailVerifyCode: undefined,
-        expirationTimestamp: undefined,
+        refreshToken,
+        created_at: new Date().toISOString(),
       };
       this.sessions = {
-        ...this.sessions,
-        [session.sessionId]: newSession,
+        [sessionId]: newSession,
       };
+
       await this.state.storage?.put({
         userData: this.userData,
         sessions: this.sessions,
@@ -323,24 +326,20 @@ export class AuthC1User implements DurableObject {
       });
     });
 
-    this.app.patch("/reset/:sessionId", async (c: Context) => {
-      const sessionId = c.req.param("sessionId");
+    this.app.patch("/reset", async (c: Context) => {
       const { emailVerifyCode, password, appSettings } = await c.req.json();
 
-      const session = this.sessions[sessionId];
-
-      if (!session) {
-        return c.json({ error: "SESSION_ID_REQUIRED" }, 404);
-      }
-
       if (
-        (session.expirationTimestamp as number) < Date.now() / 1000 ||
-        (session.emailVerifyCode as string) !== emailVerifyCode
+        (this.userData.expirationTimestamp as number) < Date.now() / 1000 ||
+        (this.userData.emailVerifyCode as string) !== emailVerifyCode
       ) {
         return handleError(expiredOrInvalidCode, c);
       }
-
+      const sessionId = generateUniqueIdWithPrefix();
+      console.log("new sessionId", sessionId);
+      const refreshToken = createRefreshToken(c);
       this.userData.emailVerified = true;
+      this.userData.password = password;
       const accessToken = await createAccessToken({
         userId: this.userData.id,
         expiresIn: appSettings.settings.expires_in,
@@ -350,19 +349,17 @@ export class AuthC1User implements DurableObject {
         applicationId: appSettings.id as string,
         secret: appSettings.settings.secret,
         algorithm: appSettings.settings.algorithm,
-        sessionId: session.sessionId,
+        sessionId,
         name: this.userData.name,
       });
       const newSession = {
-        ...session,
+        sessionId,
         accessToken,
-        emailVerifyCode: undefined,
-        expirationTimestamp: undefined,
-        password,
+        refreshToken,
+        created_at: new Date().toISOString(),
       };
       this.sessions = {
-        ...this.sessions,
-        [session.sessionId]: newSession,
+        [sessionId]: newSession,
       };
       await this.state.storage?.put({
         userData: this.userData,
@@ -445,25 +442,6 @@ export class AuthC1User implements DurableObject {
   async fetch(request: Request) {
     return this.app.fetch(request, this.env);
   }
-
-  async clearSessionsByExpiration() {
-    const allSessions = await this.sessions;
-    const filteredSessions: Record<string, SessionData> = {};
-    Object.entries(allSessions).forEach(([sessionId, sessionData]) => {
-      if ((sessionData.expirationTimestamp as number) < Date.now() / 1000) {
-        filteredSessions[sessionId] = sessionData;
-      }
-    });
-    this.sessions = filteredSessions;
-    await this.state.storage?.put({
-      sessions: this.sessions,
-    });
-    this.state.storage.setAlarm(Date.now() + 24 * 60 * 60 * 1000);
-  }
-
-  async alarm() {
-    // await this.clearSessionsByExpiration();
-  }
 }
 
 export class UserClient {
@@ -536,6 +514,15 @@ export class UserClient {
     return data;
   }
 
+  async updateUser(json: Partial<UserData>) {
+    const res = await this.user.fetch("http://user/", {
+      method: "PATCH",
+      body: JSON.stringify(json),
+    });
+    const data = await res.json();
+    return data;
+  }
+
   async getSession(sessionId: string): Promise<SessionData> {
     const res = await this.user.fetch(`http://user/sessions/${sessionId}`);
     const data: SessionData = await res.json();
@@ -545,10 +532,9 @@ export class UserClient {
   async resetPassword(
     code: string,
     password: string,
-    appSettings: ApplicationRequest,
-    sessionId: string
+    appSettings: ApplicationRequest
   ): Promise<SessionData> {
-    const res = await this.user.fetch(`http://user/reset/${sessionId}`, {
+    const res = await this.user.fetch("http://user/reset", {
       method: "PATCH",
       body: JSON.stringify({
         emailVerifyCode: code,
@@ -561,11 +547,10 @@ export class UserClient {
   }
 
   async verifyEmailCodeAndUpdate(
-    sessionId: string,
     code: string,
     appSettings: ApplicationRequest
   ) {
-    const res = await this.user.fetch(`http://user/verify/${sessionId}`, {
+    const res = await this.user.fetch("http://user/verify", {
       method: "PATCH",
       body: JSON.stringify({
         emailVerifyCode: code,
@@ -592,7 +577,6 @@ export class UserClient {
       }),
     });
     const data: AuthResponse = await res.json();
-    console.log("refreshToken++++++++++++++++++", data);
     return data;
   }
 }

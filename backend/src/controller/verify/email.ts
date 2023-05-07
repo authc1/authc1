@@ -17,7 +17,7 @@ export interface ISendVerificationEmailParams {
   emailTemplateSubject: string;
   senderEmail: string;
   emailVerificationCode: string;
-  sessionId: string;
+  sessionId?: string;
 }
 
 const sendVerificationEmail = async (
@@ -86,7 +86,7 @@ export const emailValidationController = async (c: Context) => {
         emailVerificationCode,
         sessionId,
       }), */
-      userClient.updateSession(sessionId, {
+      userClient.updateUser({
         emailVerifyCode: emailVerificationCode,
         expirationTimestamp: Math.floor(Date.now() / 1000) + 180,
       }),

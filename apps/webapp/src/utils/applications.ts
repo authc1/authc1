@@ -13,8 +13,8 @@ interface Application {
 export const createApplication = async (
   { name }: Application,
   cookie: Cookie,
-  baseUrl: string,
-  appId: string
+  appId: string,
+  baseUrl: string
 ): Promise<any | null> => {
   try {
     const data: any = await callApi(
@@ -25,9 +25,9 @@ export const createApplication = async (
           name,
         },
       },
-      baseUrl,
       appId,
-      cookie,
+      baseUrl,
+      cookie
     );
     return data;
   } catch (e: any) {
@@ -40,8 +40,8 @@ export const updateApplicationProviderById = async (
   providers: any,
   id: string,
   cookie: Cookie,
-  baseUrl: string,
-  appId: string
+  appId: string,
+  baseUrl: string
 ): Promise<any | null> => {
   try {
     const data: any = await callApi(
@@ -65,8 +65,8 @@ export const updateApplicationById = async (
   updates: any,
   id: string,
   cookie: Cookie,
+  appId: string,
   baseUrl: string,
-  appId: string
 ): Promise<any | null> => {
   try {
     const keys = Object.keys(
@@ -110,16 +110,16 @@ export const updateApplicationById = async (
 
 export const getAllApplicationForListingByUser = async (
   cookie: Cookie,
-  baseUrl: string,
   appId: string,
+  baseUrl: string
 ): Promise<any> => {
   const data: any = await callApi(
     {
       endpoint: `/applications`,
       method: "GET",
     },
-    baseUrl,
     appId,
+    baseUrl,
     cookie
   );
   return data;
@@ -127,8 +127,8 @@ export const getAllApplicationForListingByUser = async (
 
 export const getAllApplicationsById = async (
   cookie: Cookie,
-  baseUrl: string,
   appId: string,
+  baseUrl: string,
   id: string
 ): Promise<any> => {
   const data: any = await callApi(
@@ -136,8 +136,8 @@ export const getAllApplicationsById = async (
       endpoint: `/applications/${id}`,
       method: "GET",
     },
-    baseUrl,
     appId,
+    baseUrl,
     cookie
   );
   return data;
@@ -145,8 +145,8 @@ export const getAllApplicationsById = async (
 
 export const getAllApplicationsProvidersById = async (
   cookie: Cookie,
-  baseUrl: string,
   appId: string,
+  baseUrl: string,
   id: string
 ): Promise<any> => {
   const data: any = await callApi(
@@ -154,9 +154,10 @@ export const getAllApplicationsProvidersById = async (
       endpoint: `/applications/${id}/providers`,
       method: "GET",
     },
-    baseUrl,
     appId,
+    baseUrl,
     cookie
   );
+  console.log('getAllApplicationsProvidersById', data)
   return data;
 };

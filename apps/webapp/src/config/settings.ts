@@ -178,7 +178,7 @@ export const providersSettings: ProvidersData = [
         label: "Verification Method",
         value: "",
         inputType: "dropdown",
-        editable: true,
+        editable: false,
         options: [
           { label: "Code", value: "code" },
           { label: "Link", value: "link" },

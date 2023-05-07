@@ -3,9 +3,12 @@ import * as EmailAuth from "./auth/email-auth";
 import { StorageManager } from "./utils/storage";
 import type {
   AuthCallback,
+  ConfirmResetPasswordOptions,
+  ForgetPasswordOptions,
   HttpResponse,
   LoginRequest,
   RefreshTokenResponse,
+  RegisterRequest,
   Session,
 } from "./types";
 import { post } from "./utils/http";
@@ -54,9 +57,22 @@ export class Authc1Client {
     });
   }
 
-  public async signInWithEmail(
-    { email, password }: LoginRequest
-  ): Promise<Session> {
+  public get appUrl(): string {
+    return this.endpoint;
+  }
+
+  public get webSocketUrl(): string {
+    const url = new URL(this.appUrl);
+    const protocol = url.protocol === "https:" ? "wss:" : "ws:";
+    url.protocol = protocol;
+    url.pathname = `${url.pathname}`;
+    return url.toString();
+  }
+
+  public async signInWithEmail({
+    email,
+    password,
+  }: LoginRequest): Promise<Session> {
     try {
       const result = await this.emailAuthClient.login({ email, password });
       const session: Session = {
@@ -73,7 +89,11 @@ export class Authc1Client {
     }
   }
 
-  public async registerWithEmail({ name, email, password }): Promise<Session> {
+  public async registerWithEmail({
+    name,
+    email,
+    password,
+  }: RegisterRequest): Promise<Session> {
     try {
       await this.emailAuthClient.register({ name, email, password });
     } catch (err) {
@@ -85,6 +105,28 @@ export class Authc1Client {
   public async sendEmailVerification(): Promise<void> {
     try {
       await this.emailAuthClient.sendVerificationEmail();
+    } catch (err) {
+      throw err;
+    }
+    return;
+  }
+
+  public async forgetEmailPassword(
+    options: ForgetPasswordOptions
+  ): Promise<void> {
+    try {
+      await this.emailAuthClient.forgetPassword(options);
+    } catch (err) {
+      throw err;
+    }
+    return;
+  }
+
+  public async confirmEmailNewPassword(
+    options: ConfirmResetPasswordOptions
+  ): Promise<void> {
+    try {
+      await this.emailAuthClient.confirmNewPassword(options);
     } catch (err) {
       throw err;
     }

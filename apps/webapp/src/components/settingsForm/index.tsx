@@ -67,6 +67,7 @@ export const FormField = component$(
                     onChange$={onChange}
                     aria-label={label}
                     name={name}
+                    disabled={!editable}
                     class={`appearance-none rounded-md border border-zinc-900/10 bg-white py-2 px-3 block w-full shadow-md shadow-zinc-800/5 placeholder:text-zinc-400 focus:border-primary focus:outline-none focus:ring-4 focus:ring-primary/10 dark:border-zinc-700 dark:bg-zinc-700/[0.15] dark:text-zinc-200 dark:placeholder:text-zinc-500 dark:focus:border-light dark:focus:ring-light/10 sm:text-sm ${
                       editable ? "" : "opacity-50 cursor-not-allowed"
                     }`}

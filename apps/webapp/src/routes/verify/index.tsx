@@ -9,7 +9,8 @@ import type { ErrorResponse } from "~/utils/fetch";
 
 export const useSendCodeAction = routeAction$(async (data, { cookie, env }) => {
   const appId = env.get("VITE_APPLICTION_ID") as string;
-  const result = await verify(cookie, appId);
+  const baseUrl = env.get("VITE_API_URL") as string;
+  const result = await verify(cookie, appId, baseUrl);
   if ((result as ErrorResponse)?.error) {
     const { error } = result as ErrorResponse;
     return {
@@ -26,7 +27,8 @@ export const useSendCodeAction = routeAction$(async (data, { cookie, env }) => {
 export const useConfirmCodeAction = routeAction$(
   async (data, { cookie, fail, redirect, env }) => {
     const appId = env.get("VITE_APPLICTION_ID") as string;
-    const result = await confirm(data, cookie, appId);
+    const baseUrl = env.get("VITE_API_URL") as string;
+    const result = await confirm(data, cookie, appId, baseUrl);
     if ((result as ErrorResponse)?.error) {
       const { error } = result as ErrorResponse;
       return fail(403, {
