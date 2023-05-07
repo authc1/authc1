@@ -7,6 +7,7 @@ import {
   schema as applicationSchema,
 } from "../controller/applications/create";
 import { generateRandomID } from "../utils/string";
+import { ProviderSettingsSchema } from "../models/provider";
 
 export const ownerSchema = z.object({
   id: z.string(),
@@ -40,6 +41,7 @@ export const applicationUpdateschema = z.object({
   name: z.string().optional(),
   updated_at: z.date().default(new Date()),
   settings: applicationSettingsUpdateSchema,
+  providerSettings: ProviderSettingsSchema
 });
 
 export type UpdateApplicationRequest = z.infer<typeof applicationUpdateschema>;

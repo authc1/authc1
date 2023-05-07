@@ -68,3 +68,12 @@ export interface EmailAuthClientOptions {
   storage: StorageManager;
   sessionKey: string;
 }
+
+export interface ForgetPasswordOptions {
+  email: string;
+}
+export interface ConfirmResetPasswordOptions {
+  email: string;
+  code: string;
+  password: string;
+}

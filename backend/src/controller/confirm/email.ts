@@ -43,7 +43,6 @@ export const confirmEmailControllerByCode = async (c: Context) => {
 
     const promises = await Promise.all([
       userClient.verifyEmailCodeAndUpdate(
-        user.session_id as string,
         code,
         applicationInfo
       ),

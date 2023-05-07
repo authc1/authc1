@@ -20,8 +20,14 @@ import {
 
 export const userApplicationLoader = routeLoader$(
   async ({ cookie, params, env }) => {
+    const appId = env.get("VITE_APPLICTION_ID") as string;
     const baseUrl = env.get("VITE_API_URL") as string;
-    const data = await getAllApplicationsById(cookie, baseUrl, params.id);
+    const data = await getAllApplicationsById(
+      cookie,
+      appId,
+      baseUrl,
+      params.id
+    );
     return data;
   }
 );
@@ -29,10 +35,12 @@ export const userApplicationLoader = routeLoader$(
 export const useUpdateApplicationAction = routeAction$(
   async (data, { cookie, fail, redirect, params, env }) => {
     const baseUrl = env.get("VITE_API_URL") as string;
+    const appId = env.get("VITE_APPLICTION_ID") as string;
     const results = await updateApplicationById(
       data,
       params?.id,
       cookie,
+      appId,
       baseUrl
     );
     if (results?.data) {

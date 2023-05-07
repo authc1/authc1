@@ -30,9 +30,10 @@ export interface AuthState {
 
 export const getAccessTokenFromCookie = (
   cookie: Cookie,
-  appId: string
+  appId: string,
+  baseUrl: string
 ): AuthState => {
-  const client = createAuthc1Client(cookie, appId);
+  const client = createAuthc1Client(cookie, appId, baseUrl);
   const data = client.getSession();
   return {
     access_token: data?.accessToken as string,
@@ -45,13 +46,13 @@ export const getAccessTokenFromCookie = (
 
 export async function callApi<T>(
   options: ApiOptions,
-  baseUrl: string,
   appId: string,
+  baseUrl: string,
   cookie?: Cookie
 ): Promise<T> {
   try {
     const { endpoint, method, headers, body } = options;
-    const apiUrl = `${baseUrl}${endpoint}`;
+    const apiUrl = `${baseUrl}/${appId}${endpoint}`;
 
     const requestHeaders: Record<string, string> = {
       "Content-Type": "application/json",
@@ -59,7 +60,7 @@ export async function callApi<T>(
     };
 
     if (cookie) {
-      const cookieData = getAccessTokenFromCookie(cookie, appId);
+      const cookieData = getAccessTokenFromCookie(cookie, appId, baseUrl);
       const currentTime = Math.floor(Date.now() / 1000);
       if (cookieData?.expires_at < currentTime) {
         const authState = await refreshAndSaveAccessToken(cookie, appId);

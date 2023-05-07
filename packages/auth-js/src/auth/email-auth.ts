@@ -2,7 +2,9 @@ import { AuthEvent, EventEmitter } from "../utils/events";
 import { post } from "../utils/http";
 import type {
   AuthCallback,
+  ConfirmResetPasswordOptions,
   EmailAuthClientOptions,
+  ForgetPasswordOptions,
   LoginRequest,
   LoginResult,
   RegisterRequest,
@@ -125,6 +127,48 @@ export class EmailAuthClient {
   ): Promise<any> {
     const url = `${this.endpoint}/email/confirm`;
     const response = await post(url, { code }, this.session.accessToken);
+    if (response.status === 200) {
+      const result = response.data;
+      if (callback) {
+        callback(null, result);
+      }
+      return result;
+    } else {
+      const err = new Error(response.statusText);
+      if (callback) {
+        callback(err);
+      }
+      throw err;
+    }
+  }
+
+  public async forgetPassword(
+    { email }: ForgetPasswordOptions,
+    callback?: AuthCallback<any>
+  ): Promise<any> {
+    const url = `${this.endpoint}/email/forgot-password`;
+    const response = await post(url, { email });
+    if (response.status === 200) {
+      const result = response.data;
+      if (callback) {
+        callback(null, result);
+      }
+      return result;
+    } else {
+      const err = new Error(response.statusText);
+      if (callback) {
+        callback(err);
+      }
+      throw err;
+    }
+  }
+
+  public async confirmNewPassword(
+    { email, code, password }: ConfirmResetPasswordOptions,
+    callback?: AuthCallback<any>
+  ): Promise<any> {
+    const url = `${this.endpoint}/email/confirm-password`;
+    const response = await post(url, { email, code, password });
     if (response.status === 200) {
       const result = response.data;
       if (callback) {

@@ -8,7 +8,12 @@ export const AUTHTOKEN_NAME: string = "fugit.app:user";
 
 import type { Session } from "@authc1/auth-js";
 import { createAuthc1Client } from "./authc1-client";
-import type { LoginRequest, RegisterRequest } from "@authc1/auth-js/src/types";
+import type {
+  ConfirmResetPasswordOptions,
+  ForgetPasswordOptions,
+  LoginRequest,
+  RegisterRequest,
+} from "@authc1/auth-js/src/types";
 
 export const isUserAuthenticated = async (cookie: Cookie) => {
   return cookie.has(AUTHTOKEN_NAME);
@@ -26,10 +31,11 @@ interface EmailConfirm {
 export const signIn = async (
   { email, password }: LoginRequest,
   cookie: Cookie,
-  appId: string
+  appId: string,
+  baseUrl: string
 ): Promise<Session | ErrorResponse> => {
   try {
-    const client = createAuthc1Client(cookie, appId);
+    const client = createAuthc1Client(cookie, appId, baseUrl);
     const data = await client.signInWithEmail({ email, password });
     return data;
   } catch (e: any) {
@@ -41,10 +47,11 @@ export const signIn = async (
 export const register = async (
   { name, email, password }: RegisterRequest,
   cookie: Cookie,
-  appId: string
+  appId: string,
+  baseUrl: string
 ): Promise<Session | ErrorResponse> => {
   try {
-    const client = createAuthc1Client(cookie, appId);
+    const client = createAuthc1Client(cookie, appId, baseUrl);
     const data = await client.registerWithEmail({ name, email, password });
     return data;
   } catch (e: any) {
@@ -54,10 +61,11 @@ export const register = async (
 
 export const verify = async (
   cookie: Cookie,
-  appId: string
+  appId: string,
+  baseUrl: string
 ): Promise<void | ErrorResponse> => {
   try {
-    const client = createAuthc1Client(cookie, appId);
+    const client = createAuthc1Client(cookie, appId, baseUrl);
     const data = await client.sendEmailVerification();
     return data;
   } catch (e: any) {
@@ -68,10 +76,11 @@ export const verify = async (
 export const confirm = async (
   { code }: EmailConfirm,
   cookie: Cookie,
-  appId: string
+  appId: string,
+  baseUrl: string
 ): Promise<void | ErrorResponse> => {
   try {
-    const client = createAuthc1Client(cookie, appId);
+    const client = createAuthc1Client(cookie, appId, baseUrl);
     const data = await client.confirmEmailWithOtp(code);
     await client.refreshAccessToken();
     return data;
@@ -81,8 +90,42 @@ export const confirm = async (
   }
 };
 
-export const signOut = async (cookie: Cookie, appId: string) => {
-  const client = createAuthc1Client(cookie, appId);
+export const forgotPassword = async (
+  data: ForgetPasswordOptions,
+  cookie: Cookie,
+  appId: string,
+  baseUrl: string
+): Promise<void | ErrorResponse> => {
+  try {
+    const client = createAuthc1Client(cookie, appId, baseUrl);
+    const res = await client.forgetEmailPassword(data);
+    return res;
+  } catch (e: any) {
+    return e;
+  }
+};
+
+export const confirmNewPassowrd = async (
+  data: ConfirmResetPasswordOptions,
+  cookie: Cookie,
+  appId: string,
+  baseUrl: string
+): Promise<void | ErrorResponse> => {
+  try {
+    const client = createAuthc1Client(cookie, appId, baseUrl);
+    const res = await client.confirmEmailNewPassword(data);
+    return res;
+  } catch (e: any) {
+    return e;
+  }
+};
+
+export const signOut = async (
+  cookie: Cookie,
+  appId: string,
+  baseUrl: string
+) => {
+  const client = createAuthc1Client(cookie, appId, baseUrl);
   await client.logout();
   return null;
 };

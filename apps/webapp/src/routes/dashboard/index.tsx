@@ -1,16 +1,20 @@
 import { component$ } from "@builder.io/qwik";
-import type { DocumentHead} from "@builder.io/qwik-city";
-import { routeAction$} from "@builder.io/qwik-city";
+import type { DocumentHead } from "@builder.io/qwik-city";
+import { routeAction$ } from "@builder.io/qwik-city";
 import { routeLoader$ } from "@builder.io/qwik-city";
 import { zod$, Form, z } from "@builder.io/qwik-city";
 import ApplicationsList from "~/components/applicationsList";
 import Button from "~/components/button";
-import { createApplication, getAllApplicationForListingByUser } from "~/utils/applications";
+import {
+  createApplication,
+  getAllApplicationForListingByUser,
+} from "~/utils/applications";
 
 export const useCreateApplicationAction = routeAction$(
   async (data, { cookie, fail, redirect, env }) => {
+    const appId = env.get("VITE_APPLICTION_ID") as string;
     const baseUrl = env.get("VITE_API_URL") as string;
-    const result = await createApplication(data, cookie, baseUrl);
+    const result = await createApplication(data, cookie, appId, baseUrl);
     if (result?.data) {
       throw redirect(302, `/applications/${result?.data?.id}`);
     }
@@ -25,8 +29,9 @@ export const useCreateApplicationAction = routeAction$(
 );
 
 export const userApplicationLoader = routeLoader$(async ({ cookie, env }) => {
-    const baseUrl = env.get("VITE_API_URL") as string;
-  const data = await getAllApplicationForListingByUser(cookie, baseUrl);
+  const baseUrl = env.get("VITE_API_URL") as string;
+  const appId = env.get("VITE_APPLICTION_ID") as string;
+  const data = await getAllApplicationForListingByUser(cookie, appId, baseUrl);
   return data;
 });
 

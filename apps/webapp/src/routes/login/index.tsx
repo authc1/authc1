@@ -10,7 +10,8 @@ export const useSigninAction = routeAction$(
   async (data, { cookie, fail, redirect, env }) => {
     try {
       const appId = env.get("VITE_APPLICTION_ID") as string;
-      const result = await signIn(data, cookie, appId);
+      const baseUrl = env.get("VITE_API_URL") as string;
+      const result = await signIn(data, cookie, appId, baseUrl);
       if (result instanceof Error) {
         return fail(403, {
           message: "Invalid username or password",

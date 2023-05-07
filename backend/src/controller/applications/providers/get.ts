@@ -13,6 +13,7 @@ import {
   SuccessResponse,
 } from "../../../utils/success-responses";
 import { ApplicationRequest } from "../create";
+import { ApplicationClient } from "../../../do/AuthC1App";
 
 export const schema = z.object({
   select: z.string().trim().optional().default("*"),
@@ -28,7 +29,7 @@ const getApplicationProvidersController = async (c: Context) => {
     const user = c.get("user");
     const applicationId = c.req.param("id");
     const applicationInfo = c.get("applicationInfo") as ApplicationRequest;
-    console.log("fields", fields);
+    console.log("applicationInfo", applicationInfo);
     const key = `${applicationId}:email:${user.email}`;
     const hasAccess = checkAccess(c, key, applicationId);
     if (!hasAccess) {
@@ -43,11 +44,14 @@ const getApplicationProvidersController = async (c: Context) => {
       return handleSuccess(c, response);
     }
 
-    const data = await getProviderDefaultSettings(c, applicationId);
+    const id = c.env.AuthC1App.idFromString(applicationId);
+    const applicationObj = c.env.AuthC1App.get(id);
+    const applicationClient = new ApplicationClient(applicationObj);
+    const data = await applicationClient.get();
 
     const response: SuccessResponse = {
       message: "Applications fetched successfully",
-      data,
+      data: data.providerSettings,
     };
     return handleSuccess(c, response);
   } catch (err) {

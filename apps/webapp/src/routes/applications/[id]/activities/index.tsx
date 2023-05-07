@@ -3,16 +3,19 @@ import type { DocumentHead } from "@builder.io/qwik-city";
 import { routeLoader$ } from "@builder.io/qwik-city";
 import RecentActivity from "~/components/recentActivity";
 import TabBar from "~/components/tabBar";
+import { createAuthc1Client } from "~/utils/authc1-client";
 import { getAccessTokenFromCookie } from "~/utils/fetch";
 
 export const useAuthDetails = routeLoader$(async ({ cookie, env }) => {
-  const authState = getAccessTokenFromCookie(cookie);
-  const baseWssUrl = env.get("VITE_WSS_API_URL") as string;
-  const applicationId = env.get("VITE_APPLICTION_ID") as string;
+  const appId = env.get("VITE_APPLICTION_ID") as string;
+  const baseUrl = env.get("VITE_API_URL") as string;
+  const authState = getAccessTokenFromCookie(cookie, appId, baseUrl);
+  const client = createAuthc1Client(cookie, appId, baseUrl);
+  const baseWssUrl = client.webSocketUrl;
   return {
     authState,
     baseWssUrl,
-    applicationId,
+    applicationId: appId,
   };
 });
 

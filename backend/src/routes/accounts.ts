@@ -5,8 +5,6 @@ import { validateAccessToken } from "../middleware/validateAccessToken";
 import updateAccessTokenByRefreshToken, {
   schema as refreshAccessTokenSchema,
 } from "../controller/accounts/tokens/update";
-import sendResetCodeController from "../controller/accounts/password/reset/send";
-import confirmEmailResetController, { confirmRestPasswordSchema } from "../controller/accounts/password/reset/confirm";
 import getUserByIdController from "../controller/accounts/me";
 
 const accountsRoutes = new Hono();
@@ -24,17 +22,6 @@ accountsRoutes.post(
   "/access-token",
   zValidator("json", refreshAccessTokenSchema),
   updateAccessTokenByRefreshToken
-);
-
-passwordRoutes.post(
-  "/reset/verify-code",
-  sendResetCodeController
-);
-
-passwordRoutes.post(
-  "/reset/confirm-password",
-  zValidator("json", confirmRestPasswordSchema),
-  confirmEmailResetController
 );
 
 userRoutes.get("/me", getUserByIdController);
