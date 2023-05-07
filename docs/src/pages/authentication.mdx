@@ -1,0 +1,21 @@
+export const description = "Overview of how to authenticate requests to the AuthC1 platform"
+
+The AuthC1 platform uses two types of authentication: application authentication and user authentication.
+
+### Application Authentication
+
+All Authc1 APIs require that you authenticate your application by including the application ID in the URL path. The format of the URL path is `https://api.authc1.com/v1/{APPID}/endpoint`, where `{APPID}` is the ID of your AuthC1 application. You can find your application's ID in the [AuthC1 Developer Console](https://developers.authc1.com/applications).
+
+## User Authentication
+
+To authenticate users, AuthC1 uses a token-based authentication system. When a user logs in, they will be given an `access_token` and `refresh_token`. These tokens must be included in the headers of every API call that requires user authentication.
+
+### Token Expiration
+
+Both the `access_token` and `refresh_token` have a limited lifespan and will expire after a certain amount of time. When a token expires, the API will return a `401 Unauthorized` error.
+
+### Refreshing Tokens
+
+To avoid having to constantly prompt the user to log in, AuthC1 provides a way for tokens to be refreshed. When a token is close to its expiration date, the application can make a request to the AuthC1 `refresh_token` endpoint to receive a new token.
+
+It is important to note that the `refresh_token` endpoint will only return new tokens if the original `access_token` is still valid. If the `access_token` is expired, the user will need to log in again to receive new tokens.

@@ -1,0 +1,205 @@
+import { Guides } from '@/components/Guides'
+import { Features } from '@/components/Features'
+import { HeroPattern } from '@/components/HeroPattern'
+import {Button, CodeGroup} from "@/components/mdx";
+
+export const description =
+  'Implement secure authentication and authorization features like login, password reset, and email verification with AuthC1. Our privacy-first API is fully customizable and affordable at any scale, without storing any user data. Get lightning-fast performance globally for your app with AuthC1.'
+
+export const sections = [
+  { title: 'Guides', id: 'guides' },
+  { title: 'Features', id: 'features' },
+]
+
+# Introduction
+
+Welcome to the Authentication API documentation.
+
+Our Authentication API is designed to provide a secure and easy way to authenticate and authorize users for your application. With our API, you can easily implement features such as sign up, login, password reset, email verification, third-party providers such as Google and Facebook and much more.
+
+In this documentation, you will find a comprehensive guide on how to use our API, including examples and best practices. We have also included a customization checklist to help you tailor the API to your specific needs.
+
+## Getting Started
+
+To get started, you can follow these simple steps:
+
+1. Create an Application: Create an application in our system by providing a name. This will give you an application_id and secret which you will use in all API calls.
+2. Integrate API: Integrate our API into your application. Use the application_id and secret to authenticate API calls and implement the API endpoints in your application.
+3. Customize Settings: Customize settings such as email verification, password policy, and more by updating the settings in your application.
+4. Test and Deploy: Test the API integration in your development environment, and then deploy to production.
+
+Select from the following guides to learn more about how to use our API and customize it to best suit your needs:
+
+
+## Quickstart
+
+In this guide, we'll show you how to register a user with email and login with email using our API.
+
+### Register
+
+<CodeGroup>
+```typescript register.ts
+  // Register a user with email
+  const data = {
+    email: 'john.doe@example.com',
+    password: 'password'
+  }
+  const response = await fetch('https://api.authc1.com/register', {
+    method: 'POST',
+    headers: {
+      'X-Authc1-Id': '0x51a4757c8a7e4ddb9af558410a91b898'
+    },
+    body: JSON.stringify(data)
+  })
+  const json = await response.json()
+  console.log(json)
+```
+```python register.py
+  import requests
+
+data = {
+'email': 'john.doe@example.com',
+'password': 'password'
+}
+headers = {'X-Authc1-Id': '0x51a4757c8a7e4ddb9af558410a91b898'}
+response = requests.post('https://api.authc1.com/register', json=data, headers=headers)
+print(response.json())
+
+````
+```go register.go
+  package main
+
+  import (
+    "bytes"
+    "encoding/json"
+    "fmt"
+    "net/http"
+  )
+
+  func main() {
+    data := map[string]string{
+      "email": "john.doe@example.com", "password": "password"
+    }
+
+    jsonValue, _ := json.Marshal(data)
+
+    req, _ := http.NewRequest("POST", "https://api.authc1.com/register", bytes.NewBuffer(jsonValue))
+    req.Header.Set("X-Authc1-Id", "0x51a4757c8a7e4ddb9af558410a91b898")
+    req.Header.Set("Content-Type", "application/json")
+    client := &http.Client{}
+    resp, err := client.Do(req)
+    if err != nil {
+      fmt.Printf("The HTTP request failed with error %s\n", err)
+    } else {
+      var jsonData map[string]interface{}
+      json.NewDecoder(resp.Body).Decode(&jsonData)
+      fmt.Println(jsonData)
+    }
+  }
+````
+
+```rust register.rs
+  use reqwest::Client;
+
+  let data = json!({"email": "john.doe@example.com","password": "password"});
+  let client = Client::new();
+  let resp = client.post("https://api.authc1.com/register")
+              .header("X-Authc1-Id", "0x51a4757c8a7e4ddb9af558410a91b898")
+              .json(&data)
+              .send()
+              .unwrap();
+  let json_resp: serde_json::Value = resp.json().unwrap();
+  println!("{}", json_resp);
+
+```
+</CodeGroup>
+
+### Login
+
+<CodeGroup>
+  ```typescript login.ts
+    const data = {
+      email: 'example@example.com',
+      password: 'password'
+    };
+
+    const response = await fetch('https://authc1.com/api/v1/login/email', {
+      method: 'POST',
+      headers: {
+        'X-Authc1-Id': '0x51a4757c8a7e4ddb9af558410a91b898'
+      },
+      body: JSON.stringify(data)
+    })
+    const json = await response.json()
+    console.log(json)
+
+````
+```python login.py
+  import requests
+
+  data = {
+    'email': 'example@example.com',
+    'password': 'password'
+  }
+
+  headers = {'X-Authc1-Id': '0x51a4757c8a7e4ddb9af558410a91b898'}
+
+  response = requests.post('https://authc1.com/api/v1/login/email', data=data, headers=headers)
+
+  print(response.json())
+````
+
+```go login.go
+  package main
+
+  import (
+    "bytes"
+    "encoding/json"
+    "fmt"
+    "net/http"
+  )
+
+  func main() {
+    data := map[string]string{
+      "email":    "example@example.com",
+      "password": "password",
+    }
+
+    jsonValue, _ := json.Marshal(data)
+
+    req, _ := http.NewRequest("POST", "https://authc1.com/api/v1/login/email", bytes.NewBuffer(jsonValue))
+    req.Header.Set("X-Authc1-Id", "0x51a4757c8a7e4ddb9af558410a91b898")
+    req.Header.Set("Content-Type", "application/json")
+    client := &http.Client{}
+    resp, err := client.Do(req)
+    if err != nil {
+      fmt.Printf("The HTTP request failed with error %s\n", err)
+    } else {
+      var jsonData map[string]interface{}
+      json.NewDecoder(resp.Body).Decode(&jsonData)
+      fmt.Println(jsonData)
+    }
+  }
+```
+
+```rust login.rs
+  use reqwest::Client;
+  use serde_json::json;
+
+  fn main() {
+      let data = json!({"email": "example@example.com","password": "password"});
+      let client = Client::new();
+      let resp = client.post("https://authc1.com/api/v1/login/email")
+                  .header("X-Authc1-Id", "0x51a4757c8a7e4ddb9af558410a91b898")
+                  .json(&data)
+                  .send()
+                  .unwrap();
+      let json_resp: serde_json::Value = resp.json().unwrap();
+      println!("{}", json_resp);
+  }
+```
+</CodeGroup>
+
+<Guides />
+
+<Features />

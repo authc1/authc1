@@ -1,0 +1,99 @@
+export const description =
+  'The Register API allows new users to register for an account on the AuthC1 platform using email and password. To use the API, you will need to make a POST request to the endpoint with the required parameters in the request body.'
+
+# Email Provider
+
+---
+
+## Login User {{ tag: 'POST', label: '/v1/{APPID}/email/login' }}
+
+<Row>
+  <Col>
+    This API endpoint allows you to log in a user to your application using their email address and password.
+
+    ### Required attributes
+
+    <Properties>
+      <Property name="email" type="string">
+        The user's email address.
+      </Property>
+      <Property name="password" type="string">
+        The user's password.
+      </Property>
+    </Properties>
+  </Col>
+  <Col sticky>
+    <CodeGroup title="Request" tag="POST" label="/v1/{APPID}/email/login">
+        ```bash {{ title: 'cURL' }}
+        curl https://api.example.com/v1/{APPID}/email/login \
+          -H "Content-Type: application/json" \
+          -X POST \
+          -d '{
+            "email": "user@example.com",
+            "password": "mypassword"
+          }'
+        ```
+
+    </CodeGroup>
+
+    ```json {{ title: 'Response' }}
+    {
+      "token": "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJzdWIiOiIxMjM0NTY3ODkwIiwibmFtZSI6IkpvaG4gRG9lIiwiaWF0IjoxNTE2MjM5MDIyfQ.SflKxwRJSMeKKF2QT4fwpMeJf36POk6yJV_adQssw5c",
+      "user": {
+        "id": "123456",
+        "email": "user@example.com",
+        "name": "John Doe"
+      }
+    }
+    ```
+  </Col>
+</Row>
+---
+
+---
+## Register User {{ tag: 'POST', label: '/v1/{APPID}/email/register' }}
+<Row>
+  <Col>
+    This API endpoint allows you to register a new user to your application using their email address and password.
+
+    ### Required attributes
+
+    <Properties>
+      <Property name="name" type="string">
+        The user's name.
+      </Property>
+      <Property name="email" type="string">
+        The user's email address.
+      </Property>
+      <Property name="password" type="string">
+        The user's password.
+      </Property>
+    </Properties>
+  </Col>
+  <Col sticky>
+  <CodeGroup title="Request" tag="POST" label="/v1/{APPID}/email/register">
+    ```bash {{ title: 'cURL' }}
+    curl https://api.example.com/v1/{APPID}/email/register \
+      -H "Content-Type: application/json" \
+      -X POST \
+      -d '{
+        "name": "John Doe",
+        "email": "user@example.com",
+        "password": "mypassword"
+      }'
+    ```
+  </CodeGroup>
+
+  ```json {{ title: 'Response' }}
+    {
+      "email": "user@example.com",
+      "name": "John Doe",
+      "local_id": "fcc45e40999d78973c0c5d92623f05da0b283c62876c0dfbed65778bbf41a03b",
+      "expires_in": 86400,
+      "expires_at": 1683572605
+    }
+  ```
+
+  </Col>
+</Row>
+___

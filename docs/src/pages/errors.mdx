@@ -1,0 +1,52 @@
+# Error Documentation
+
+This document describes the error responses returned by the API, along with their corresponding status codes and error codes.
+
+## Error Response Structure
+
+The error response returned by the API has the following structure:
+
+```typescript
+interface ErrorResponse {
+  error: {
+    code: string;
+    message: string;
+    details?: { [key: string]: any };
+  };
+  status: number;
+}
+```
+where:
+
+error: An object containing the error code, error message and optional error details.
+status: The HTTP status code that corresponds to the error.
+
+## Error Codes and Messages
+
+The following table describes the error codes, messages and status codes that can be returned by the API:
+
+| Error Code                 | Error Message                                                       | Status Code |
+|----------------------------|---------------------------------------------------------------------|-------------|
+| EMAIL_IN_USE               | The email you entered is already in use, please try another one.    | 409         |
+| REGISTRATION_ERROR         | Error during registration.                                          | 500         |
+| INVALID_PASSWORD           | The password you entered does not meet the required security standards. Please try a different password. | 400 |
+| INVALID_EMAIL              | The email you entered is not in a valid format.                     | 400         |
+| EMAIL_NOT_VERIFIED         | The email provided has not been verified.                           | 403         |
+| EMAIL_ALREADY_VERIFIED     | This email is already verified.                                     | 403         |
+| INVALID_CREDENTIALS        | The email or password you entered is incorrect.                     | 401         |
+| SERVER_ERROR               | An internal server error occurred. Please try again later.          | 500         |
+| USER_NOT_FOUND             | The provided email address or token could not be found in our system.| 404         |
+| EXPIRED_OR_INVALID_LINK    | Expired or invalid link.                                            | 404         |
+| EXPIRED_OR_INVALID_CODE    | Expired or invalid code.                                            | 404         |
+| LOGIN_ERROR                | Error during login.                                                 | 500         |
+| EMAIL_VERIFICATION_ERROR   | Error during email verification.                                    | 500         |
+| EMAIL_VERIFICATION_DISABLED| Email verification is not enabled for this application.             | 400         |
+| APPLICATION_NOT_FOUND      | The application could not be found with the provided X-Authc1-Id.   | 404         |
+| MESSAGE_REJECTED           | The email message was rejected by Amazon SES.                        | 400         |
+| INVALID_PARAMETER_VALUE    | An invalid value was provided for one of the request parameters.     | 400         |
+| CREDENTIALS_ERROR          | The provided AWS credentials are invalid.                           | 401         |
+| MAIL_FROM_DOMAIN_NOT_VERIFIED | The Mail-From domain is not verified.                              | 400         |
+| ACCOUNT_SUSPENDED          | The AWS account has been suspended.                                  | 403         |
+| CONFIGURATION_SET_DOES_NOT_EXIST | The specified configuration set does not exist.                  | 400         |
+| CREATE_APPLICATION_ERROR   | Error occurred while creating the application.                      | 500         |
+| INVALID_INPUT              | The request payload does not contain valid data.                     | 400         |

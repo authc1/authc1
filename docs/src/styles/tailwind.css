@@ -1,0 +1,19 @@
+:root {
+  
+}
+
+:root::-webkit-scrollbar {
+  display: none;
+}
+
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+.prose :where(a):not(:where([class~="not-prose"] *)) {
+  color: rgb(34 211 238);
+}
+
+.prose :where(a):not(:where([class~="not-prose"] *)):hover {
+  color: rgb(62, 226, 251);
+}
