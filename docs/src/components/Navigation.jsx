@@ -197,6 +197,7 @@ export const navigation = [
     title: 'API Reference',
     links: [
       { title: 'Email', href: '/email' },
+      { title: 'Accounts', href: '/accounts' },
     ],
   },
 ]
@@ -206,7 +207,7 @@ export function Navigation(props) {
     <nav {...props}>
       <ul role="list">
         <TopLevelNavItem href="/">API</TopLevelNavItem>
-        <TopLevelNavItem href="https://github.com/reforged" target="_blank">Github</TopLevelNavItem>
+        <TopLevelNavItem href="https://github.com/subhendukundu/authc1" target="_blank">Github</TopLevelNavItem>
         {navigation.map((group, groupIndex) => (
           <NavigationGroup
             key={group.title}
