@@ -1,5 +1,4 @@
-export const description =
-  'The Register API allows new users to register for an account on the AuthC1 platform using email and password. To use the API, you will need to make a POST request to the endpoint with the required parameters in the request body.'
+export const description = 'This contains documentation for the Register API endpoints that allow new users to register for an account on the AuthC1 platform using email and password. It also includes the code for verifying an email address using the same platform.'
 
 # Email Provider
 
@@ -25,11 +24,11 @@ export const description =
   <Col sticky>
     <CodeGroup title="Request" tag="POST" label="/v1/{APPID}/email/login">
         ```bash {{ title: 'cURL' }}
-        curl https://api.example.com/v1/{APPID}/email/login \
+        curl https://api.authc1.com/v1/{APPID}/email/login \
           -H "Content-Type: application/json" \
           -X POST \
           -d '{
-            "email": "user@example.com",
+            "email": "user@authc1.com",
             "password": "mypassword"
           }'
         ```
@@ -41,14 +40,13 @@ export const description =
       "token": "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJzdWIiOiIxMjM0NTY3ODkwIiwibmFtZSI6IkpvaG4gRG9lIiwiaWF0IjoxNTE2MjM5MDIyfQ.SflKxwRJSMeKKF2QT4fwpMeJf36POk6yJV_adQssw5c",
       "user": {
         "id": "123456",
-        "email": "user@example.com",
+        "email": "user@authc1.com",
         "name": "John Doe"
       }
     }
     ```
   </Col>
 </Row>
----
 
 ---
 ## Register User {{ tag: 'POST', label: '/v1/{APPID}/email/register' }}
@@ -73,12 +71,12 @@ export const description =
   <Col sticky>
   <CodeGroup title="Request" tag="POST" label="/v1/{APPID}/email/register">
     ```bash {{ title: 'cURL' }}
-    curl https://api.example.com/v1/{APPID}/email/register \
+    curl https://api.authc1.com/v1/{APPID}/email/register \
       -H "Content-Type: application/json" \
       -X POST \
       -d '{
         "name": "John Doe",
-        "email": "user@example.com",
+        "email": "user@authc1.com",
         "password": "mypassword"
       }'
     ```
@@ -86,7 +84,7 @@ export const description =
 
   ```json {{ title: 'Response' }}
     {
-      "email": "user@example.com",
+      "email": "user@authc1.com",
       "name": "John Doe",
       "local_id": "fcc45e40999d78973c0c5d92623f05da0b283c62876c0dfbed65778bbf41a03b",
       "expires_in": 86400,
@@ -96,4 +94,153 @@ export const description =
 
   </Col>
 </Row>
-___
+
+---
+## Verify Email {{ tag: 'POST', label: '/v1/{APPID}/email/verify' }}
+
+<Row>
+  <Col>
+    This API endpoint allows you to verify an email address registered with AuthC1 using your application.
+
+    ### Empty payload
+
+    This endpoint expects an empty payload, please do not include any data in your payload when calling this endpoint.
+  </Col>
+
+  <Col sticky>
+    <CodeGroup title="Request" tag="POST" label="/v1/{APPID}/email/verify">
+        ```bash {{ title: 'cURL' }}
+        curl https://api.authc1.com/v1/{APPID}/email/verify \
+          -H "Content-Type: application/json" \
+          -X POST
+        ```
+    </CodeGroup>
+
+    ```json {{ title: 'Response' }}
+    {
+      "email": "user@authc1.com"
+    }
+    ```
+  </Col>
+</Row>
+
+---
+## Confirm Email {{ tag: 'POST', label: '/v1/{APPID}/email/confirm' }}
+
+<Row>
+  <Col>
+  This API endpoint confirms a user's email address registered with AuthC1 using your application.
+
+    ### Required attributes
+
+    <Properties>
+      <Property name="code" type="string">
+        The confirmation code received by the user via email.
+      </Property>
+    </Properties>
+  </Col>
+  <Col sticky>
+    <CodeGroup title="Request" tag="POST" label="/v1/{APPID}/email/confirm">
+        ```bash {{ title: 'cURL' }}
+        curl https://api.authc1.com/v1/{APPID}/email/confirm \
+          -H "Content-Type: application/json" \
+          -X POST \
+          -d '{
+            "code": "xxxx"
+          }'
+        ```
+    </CodeGroup>
+
+    ```json {{ title: 'Response' }}
+    {
+      "access_token": "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9...",
+      "refresh_token": "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9...",
+      "expires_in": 3600,
+      "expires_at": 1645239717,
+      "name": "John Doe",
+      "local_id": "123456",
+      "email": "user@example.com"
+    }
+    ```
+  </Col>
+</Row>
+
+---
+## Forgot Password {{ tag: 'POST', label: '/v1/{APPID}/email/forgot-password' }}
+
+<Row>
+  <Col>
+    This API endpoint allows users to reset their password by sending a password reset email. 
+
+    ### Required attributes
+
+    <Properties>
+      <Property name="email" type="string">
+        The user's email address.
+      </Property>
+    </Properties>
+  </Col>
+
+  <Col sticky>
+    <CodeGroup title="Request" tag="POST" label="/v1/{APPID}/email/forgot-password">
+        ```bash {{ title: 'cURL' }}
+        curl https://api.authc1.com/v1/{APPID}/email/forgot-password \
+          -H "Content-Type: application/json" \
+          -X POST \
+          -d '{
+            "email": "user@authc1.com"
+          }'
+        ```
+    </CodeGroup>
+
+    ```json {{ title: 'Response' }}
+    {
+      "email": "user@authc1.com"
+    }
+    ```
+  </Col>
+</Row>
+
+---
+## Confirm Password {{ tag: 'POST', label: '/v1/{APPID}/email/confirm-password' }}
+
+<Row>
+  <Col>
+    This API endpoint confirms a user's new password after resetting it.
+
+    ### Required attributes
+
+    <Properties>
+      <Property name="email" type="string">
+        The user's email address.
+      </Property>
+      <Property name="code" type="string">
+        The confirmation code received by the user via email.
+      </Property>
+      <Property name="password" type="string">
+        The password being reset.
+      </Property>
+    </Properties>
+  </Col>
+  <Col sticky>
+    <CodeGroup title="Request" tag="POST" label="/v1/{APPID}/email/confirm-password">
+        ```bash {{ title: 'cURL' }}
+        curl https://api.authc1.com/v1/{APPID}/email/confirm-password \
+          -H "Content-Type: application/json" \
+          -X POST \
+          -d '{
+            "email": "user@authc1.com",
+            "code": "xxxx",
+            "password": "newPassword"
+          }'
+        ```
+    </CodeGroup>
+
+    ```json {{ title: 'Response' }}
+    {
+      "email": "user@authc1.com"
+    }
+    ```
+  </Col>
+</Row>
+---

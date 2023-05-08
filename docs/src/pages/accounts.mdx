@@ -1,0 +1,43 @@
+export const description = 'This contains documentation for the Register API endpoints that allow new users to register for an account on the AuthC1 platform using email and password. It also includes the code for verifying an email address using the same platform.'
+
+# Accounts
+
+---
+
+## Access Token {{ tag: 'POST', label: '/v1/{APPID}/accounts/access-token' }}
+
+<Row>
+  <Col>
+    This API endpoint returns an access token that can be used to authenticate future requests.
+
+    ### Required attributes
+
+    <Properties>
+      <Property name="refresh_token" type="string">
+        The refresh token used for obtaining a new access token.
+      </Property>
+    </Properties>
+  </Col>
+
+  <Col sticky>
+    <CodeGroup title="Request" tag="POST" label="/v1/{APPID}/accounts/access-token">
+        ```bash {{ title: 'cURL' }}
+        curl https://api.authc1.com/v1/{APPID}/accounts/access-token \
+          -H "Content-Type: application/json" \
+          -X POST \
+          -d '{
+            "refresh_token": "xxxxxxxxxx"
+          }'
+        ```
+    </CodeGroup>
+
+    ```json {{ title: 'Response' }}
+    {
+      "access_token": "xxxxx",
+      "refresh_token": "xxxxx",
+      "expires_in": 3600,
+      "expires_at": 1683572605
+    }
+    ```
+  </Col>
+</Row>

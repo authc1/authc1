@@ -63,11 +63,15 @@ export async function callApi<T>(
       const cookieData = getAccessTokenFromCookie(cookie, appId, baseUrl);
       const currentTime = Math.floor(Date.now() / 1000);
       if (cookieData?.expires_at < currentTime) {
-        const authState = await refreshAndSaveAccessToken(cookie, appId);
+        const authState = await refreshAndSaveAccessToken(
+          cookie,
+          appId,
+          baseUrl
+        );
         if (!authState) {
           throw new Error("Unable to refresh access token.");
         }
-        requestHeaders["Authorization"] = `Bearer ${authState.access_token}`;
+        requestHeaders["Authorization"] = `Bearer ${authState.accessToken}`;
       } else {
         requestHeaders["Authorization"] = `Bearer ${cookieData.access_token}`;
       }

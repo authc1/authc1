@@ -143,34 +143,10 @@ export interface JwtPayloadToUser {
 
 export async function refreshAndSaveAccessToken(
   cookie: Cookie,
-  appId: string
-): Promise<AuthState | null> {
-  const authState = getAccessTokenFromCookie(cookie, appId);
-  const refreshToken = authState.refresh_token;
-  try {
-    const body = {
-      refresh_token: refreshToken,
-    };
-
-    const responseData: any = await callApi(
-      {
-        endpoint: "/accounts/access-token",
-        method: "POST",
-        body,
-      },
-      appId,
-      appId
-    );
-
-    const tokenData: AuthState = responseData?.data;
-    cookie.set(AUTHTOKEN_NAME, JSON.stringify(tokenData), {
-      httpOnly: true,
-      maxAge: [tokenData.expires_in as number, "seconds"],
-      path: "/",
-    });
-    return tokenData;
-  } catch (error) {
-    console.error("Error refreshing access token:", error);
-    return null;
-  }
+  appId: string,
+  baseUrl: string
+): Promise<Session> {
+  const client = createAuthc1Client(cookie, appId, baseUrl);
+  const session = await client.refreshAccessToken();
+  return session;
 }
