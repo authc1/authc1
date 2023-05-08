@@ -1,18 +1,17 @@
 import type { Cookie } from "@builder.io/qwik-city";
 import jsonwebtoken from "@tsndr/cloudflare-worker-jwt";
-import type { AuthState, ErrorResponse } from "./fetch";
-import { getAccessTokenFromCookie } from "./fetch";
-import { callApi } from "./fetch";
+import type { ErrorResponse } from "./fetch";
 import type { JwtUser } from "~/types";
 export const AUTHTOKEN_NAME: string = "fugit.app:user";
 
-import type { Session } from "@authc1/auth-js";
+
 import { createAuthc1Client } from "./authc1-client";
 import type {
   ConfirmResetPasswordOptions,
   ForgetPasswordOptions,
   LoginRequest,
   RegisterRequest,
+  Session,
 } from "@authc1/auth-js/src/types";
 
 export const isUserAuthenticated = async (cookie: Cookie) => {

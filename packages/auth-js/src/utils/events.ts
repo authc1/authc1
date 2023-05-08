@@ -28,7 +28,7 @@ enum AuthEvent {
   FORGOT_PASSWORD_ERROR = "forgot_password_error",
 }
 
-type EventHandler = (...args: any[]) => void;
+export type EventHandler = (...args: any[]) => void;
 
 class EventEmitter {
   private events: Map<AuthEvent, EventHandler[]> = new Map();
@@ -84,4 +84,4 @@ class EventEmitter {
   }
 }
 
-export { AuthEvent, EventHandler, EventEmitter };
+export { AuthEvent, EventEmitter };

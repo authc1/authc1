@@ -1,6 +1,7 @@
 import type { Cookie } from "@builder.io/qwik-city";
 import type { Storage } from "@authc1/auth-js";
-import { Authc1Client } from "../../../../packages/auth-js/src/index";
+import { Authc1Client } from "@authc1/auth-js";
+// import { Authc1Client } from "../../../../packages/auth-js/src/index";
 
 const createCookieStorageManager = (cookie: Cookie): Storage => {
   return {

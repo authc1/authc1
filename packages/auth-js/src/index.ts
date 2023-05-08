@@ -13,6 +13,7 @@ import type {
 } from "./types";
 import { post } from "./utils/http";
 export { StorageManager, Storage } from "./utils/storage";
+export * from './types';
 
 export type AuthStateChangedSubscription = {
   unsubscribe: () => void;
