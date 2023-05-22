@@ -7,7 +7,9 @@
     "dev": "turbo run dev",
     "build": "turbo run build",
     "build:app": "turbo run build --filter=authc1-app",
-    "deploy:app": "rm -rf node_modules && corepack enable && pnpm install && pnpm build:app",
+    "deploy:app": "cd apps/webapp && npx wrangler pages publish dist --project-name authc1",
+    "deploy:docs": "cd docs && npx wrangler pages publish out --project-name authc1-docs",
+    "deploy": "pnpm run build && pnpm run deploy:app && pnpm run deploy:docs",
     "test": "echo \"Error: no test specified\" && exit 1"
   },
   "workspaces": [

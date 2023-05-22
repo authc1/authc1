@@ -80,9 +80,9 @@ export default function App({ Component, pageProps }) {
       <>
         <Head>
           {router.pathname === '/' ? (
-            <title>Reforged API Reference</title>
+            <title>Authc1 API Reference</title>
           ) : (
-            <title>{`${title} - Reforged API Reference`}</title>
+            <title>{`${title} - Authc1 API Reference`}</title>
           )}
           {description && <meta name="description" content={description} />}
         </Head>

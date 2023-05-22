@@ -4,7 +4,7 @@ import { Link } from "@builder.io/qwik-city";
 import { navigation } from "../authenticatedHeader";
 import { GitHubIcon, TwitterIcon } from "../icons/socials";
 
-export const NavLink = component$(({ href, isActive }: any) => {
+export const NavLink = component$(({ href, isActive, target }: any) => {
   return (
     <Link
       href={href}
@@ -13,6 +13,7 @@ export const NavLink = component$(({ href, isActive }: any) => {
           ? "text-primary active dark:text-primary"
           : "transition hover:text-primary dark:hover:text-light"
       }
+      target={target}
     >
       <Slot />
     </Link>

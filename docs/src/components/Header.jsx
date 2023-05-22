@@ -62,15 +62,15 @@ export const Header = forwardRef(function Header({ className }, ref) {
       <div className="flex items-center gap-5 lg:hidden">
         <MobileNavigation />
         <Link href="/" aria-label="Home" className="flex gap-2 items-center">
-          <img className="h-8 w-8 object-cover rounded-md bg-zinc-800 p-1" src="https://cdn.discordapp.com/attachments/935833137349541918/1071833266841210961/branding.png" alt=""/>
-          <span className="text-gray-100 font-bold text-lg">Reforged</span>
+          <img className="h-8 w-8 object-cover rounded-md bg-zinc-800 p-1" src="/logo/authc1-logo.svg" alt="Authc1 brand"/>
+          <span className="text-gray-100 font-bold text-lg">Authc1</span>
         </Link>
       </div>
       <div className="flex items-center gap-5">
         <nav className="hidden md:block">
           <ul role="list" className="flex items-center gap-8">
             <TopLevelNavItem href="/">API</TopLevelNavItem>
-            <TopLevelNavItem href="https://github.com/reforged" target="_blank">Github</TopLevelNavItem>
+            <TopLevelNavItem href="https://github.com/subhendukundu/authc1" target="_blank">Github</TopLevelNavItem>
           </ul>
         </nav>
         <div className="hidden md:block md:h-5 md:w-px md:bg-zinc-900/10 md:dark:bg-white/15" />

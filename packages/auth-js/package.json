@@ -1,7 +1,6 @@
 {
   "name": "@authc1/auth-js",
-  "private": true,
-  "version": "0.0.0",
+  "version": "0.0.1",
   "type": "module",
   "description": "",
   "main": "dist/index.js",
@@ -20,6 +19,6 @@
   },
   "keywords": [],
   "author": "",
-  "license": "ISC",
+  "license": "MIT",
   "dependencies": {}
 }

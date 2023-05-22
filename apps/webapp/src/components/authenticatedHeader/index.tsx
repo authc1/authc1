@@ -6,10 +6,12 @@ export const navigation = [
   {
     name: "Dashboard",
     href: "/dashboard",
+    target: "_self"
   },
   {
-    name: "Documentation",
-    href: "/docs",
+    label: "Documentation",
+    href: "https://docs.authc1.com",
+    target: "_blank"
   },
 ];
 

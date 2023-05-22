@@ -3,7 +3,7 @@
   "author": "Subh <subhendukundu14@gmail.com>",
   "description": "Simplify user management with Authc1's cloud-based IAM platform",
   "engines": {
-    "node": ">=15.0.0"
+    "node": ">=18.0.0"
   },
   "private": true,
   "scripts": {
@@ -23,15 +23,15 @@
     "qwik": "qwik"
   },
   "devDependencies": {
-    "@builder.io/qwik": "0.104.0",
-    "@builder.io/qwik-city": "~0.104.0",
+    "@builder.io/qwik": "1.1.1",
+    "@builder.io/qwik-city": "1.1.1",
     "@types/eslint": "8.37.0",
     "@types/node": "^18.15.9",
     "@typescript-eslint/eslint-plugin": "5.59.0",
     "@typescript-eslint/parser": "5.59.0",
     "autoprefixer": "^10.4.13",
     "eslint": "8.38.0",
-    "eslint-plugin-qwik": "0.104.0",
+    "eslint-plugin-qwik": "1.1.1",
     "postcss": "^8.4.21",
     "prettier": "2.8.7",
     "tailwindcss": "^3.3.2",
@@ -42,7 +42,7 @@
     "wrangler": "latest"
   },
   "dependencies": {
-    "@authc1/auth-js": "workspace:*",
+    "@authc1/auth-js": "0.0.1",
     "@tsndr/cloudflare-worker-jwt": "^2.2.1",
     "date-fns": "^2.29.3",
     "zod": "^3.21.4"
