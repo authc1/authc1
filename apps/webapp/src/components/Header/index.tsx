@@ -1,21 +1,22 @@
 import { component$ } from "@builder.io/qwik";
-import type { ActionStore, FailReturn } from "@builder.io/qwik-city";
 import { Link, useLocation } from "@builder.io/qwik-city";
 import { NavLink } from "../footer";
 import UserDropdown from "../user-dropdown/user-dropdown";
 
 export const authenticatedNavigation = [
-  { label: "Dashboard", href: "/dashboard" },
+  { label: "Dashboard", href: "/dashboard", target: "_self" },
 ];
 
 export const unAuthenticatedNavigation = [
   {
     label: "Documentation",
-    href: "/docs",
+    href: "https://docs.authc1.com",
+    target: "_blank"
   },
   {
     label: "Pricing",
     href: "/pricing",
+    target: "_self"
   },
 ];
 
@@ -23,11 +24,7 @@ interface Props {
   isLoggedIn: boolean;
   userName: string;
   email: string;
-  logoutAction: ActionStore<
-    FailReturn<{ message: string }>,
-    Record<string, any>,
-    true
-  >;
+  logoutAction: any;
 }
 
 export default component$(
@@ -56,6 +53,7 @@ export default component$(
                 href={nav.href}
                 key={nav.href}
                 isActive={pathname === nav.href}
+                target={nav.target}
               >
                 {nav.label}
               </NavLink>
