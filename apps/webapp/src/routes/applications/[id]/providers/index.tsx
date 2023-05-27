@@ -212,7 +212,7 @@ export default component$(() => {
                       {item?.canCopy && (
                         <div class="flex items-center mt-8 bg-gray-100 w-max max-w-max rounded-md">
                           <span class="text-xs font-medium text-gray-900 mx-4">
-                            {baseUrl}/providers/{id}/{item.key}/callback
+                            {baseUrl}/{id}/{item.key}/callback
                           </span>
                           <button
                             data-tooltip-target="default-radio-example-copy-clipboard-tooltip"
@@ -222,7 +222,7 @@ export default component$(() => {
                             class="flex items-center px-3 py-3 text-xs font-medium text-gray-600 bg-gray-100 border-l rounded-r-md border-gray-200 dark:border-gray-600 dark:text-gray-400 dark:bg-gray-800 hover:text-blue-700 dark:hover:text-white copy-to-clipboard-button"
                             onClick$={() => {
                               navigator.clipboard.writeText(
-                                `${baseUrl}/providers/${id}/${item.key}/callback`
+                                `${baseUrl}/${id}/${item.key}/callback`
                               );
                             }}
                           >
