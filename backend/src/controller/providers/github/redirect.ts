@@ -12,12 +12,19 @@ const githubRedirectController = async (c: Context) => {
   try {
     const applicationInfo = c.get("applicationInfo") as ApplicationRequest;
     const { github_client_id: clientId } = applicationInfo.providerSettings;
-
+    const format = c.req.queries("format") || 'redirect';
     const options = {
       clientId,
     };
 
-    return providerRedirect(c, github, options);
+    const redirectUrl = await providerRedirect(c, github, options);
+
+    if(format === 'json') {
+      return c.json({
+        url: redirectUrl
+      })
+    }
+    return c.redirect(redirectUrl);
   } catch (e: any) {
     console.log("error", e.message);
     if (e.message === "No client id passed") {
