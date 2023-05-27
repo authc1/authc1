@@ -137,23 +137,11 @@ export async function providerRedirect(
   options: ProviderRedirectOptions
 ) {
   try {
-    const sessionId = c.get("sessionId") as string;
-    const redirectUrl = c.req.queries("redirect_url");
-
     const location = await provider.redirect({
       options,
     });
 
-    await c.env.AUTHC1_USER_DETAILS.put(
-      sessionId,
-      JSON.stringify({
-        redirect_url: redirectUrl,
-      })
-    );
-
-    return c.json({
-      url: location,
-    });
+    return location;
   } catch (e: any) {
     console.log("error", e.message);
     if (e.message === "No client id passed") {
