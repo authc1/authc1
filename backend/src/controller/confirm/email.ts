@@ -34,10 +34,8 @@ export const confirmEmailControllerByCode = async (c: Context) => {
     const applicationInfo: ApplicationRequest = c.get("applicationInfo");
     const applicationId = applicationInfo.id as string;
     const user = c.get("user");
-    const key = `${applicationInfo?.id}:email:${user?.email}`;
-    console.log("key", key, user);
 
-    const userObjId = c.env.AuthC1User.idFromName(key);
+    const userObjId = c.env.AuthC1User.idFromString(user?.user_id);
     const stub = c.env.AuthC1User.get(userObjId);
     const userClient = new UserClient(stub);
 

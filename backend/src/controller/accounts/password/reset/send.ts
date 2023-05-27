@@ -71,14 +71,14 @@ const sendResetCodeController = async (c: Context) => {
     const userClient = new UserClient(stub);
 
     await Promise.all([
-      /* sendVerificationEmail(c, {
+      sendVerificationEmail(c, {
         email,
         emailVerificationMethod,
         emailTemplateBody,
         emailTemplateSubject,
         senderEmail,
         emailVerificationCode,
-      }), */
+      }),
       userClient.updateUser({
         emailVerifyCode: emailVerificationCode,
         expirationTimestamp: Math.floor(Date.now() / 1000) + 180,
