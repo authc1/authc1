@@ -50,8 +50,8 @@ export const updateApplicationProviderById = async (
         method: "POST",
         body: providers,
       },
-      baseUrl,
       appId,
+      baseUrl,
       cookie
     );
     return data;
@@ -96,8 +96,8 @@ export const updateApplicationById = async (
         method: "POST",
         body: data,
       },
-      baseUrl,
       appId,
+      baseUrl,
       cookie
     );
 
