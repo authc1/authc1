@@ -48,7 +48,7 @@ export const emailValidationController = async (c: Context) => {
     const applicationInfo: ApplicationRequest = c.get("applicationInfo");
     const applicationId = applicationInfo.id as string;
     const user = c.get("user");
-    const { email, id, session_id: sessionId } = user;
+    const { email, user_id: userId, session_id: sessionId } = user;
 
     if (user.email_verified) {
       return handleError(userEmailAlreadyVerified, c);
@@ -67,17 +67,14 @@ export const emailValidationController = async (c: Context) => {
     }
     const emailVerificationCode = generateEmailVerificationCode();
 
-    const key = `${applicationInfo?.id}:email:${email}`;
-    console.log("key", key);
-
-    const userObjId = c.env.AuthC1User.idFromName(key);
+    const userObjId = c.env.AuthC1User.idFromString(userId);
     const stub = c.env.AuthC1User.get(userObjId);
     const userClient = new UserClient(stub);
 
     console.log("emailVerificationCode", emailVerificationCode);
 
     await Promise.all([
-      /* sendVerificationEmail(c, {
+      sendVerificationEmail(c, {
         email,
         emailVerificationMethod,
         emailTemplateBody,
@@ -85,7 +82,7 @@ export const emailValidationController = async (c: Context) => {
         senderEmail,
         emailVerificationCode,
         sessionId,
-      }), */
+      }),
       userClient.updateUser({
         emailVerifyCode: emailVerificationCode,
         expirationTimestamp: Math.floor(Date.now() / 1000) + 180,
@@ -94,7 +91,7 @@ export const emailValidationController = async (c: Context) => {
 
     await c.env.AUTHC1_ACTIVITY_QUEUE.send({
       acitivity: "RequestEmailVerification",
-      id,
+      id: userId,
       applicationId,
       created_at: Date.now(),
     });

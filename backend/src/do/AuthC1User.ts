@@ -179,6 +179,7 @@ export class AuthC1User implements DurableObject {
         ...this.userData,
         ...userData,
       };
+      await this.state.storage?.put("userData", this.userData);
       return c.json(this.userData || {});
     });
 
@@ -282,6 +283,8 @@ export class AuthC1User implements DurableObject {
       const { emailVerifyCode, appSettings } = await c.req.json();
       console.log(
         "session",
+        emailVerifyCode,
+        this.userData,
         (this.userData.expirationTimestamp as number) > Date.now() / 1000
       );
 

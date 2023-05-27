@@ -39,10 +39,10 @@
     "undici": "5.21.2",
     "vite": "4.2.2",
     "vite-tsconfig-paths": "4.2.0",
-    "wrangler": "latest"
+    "wrangler": "^2.19.0"
   },
   "dependencies": {
-    "@authc1/auth-js": "0.0.1",
+    "@authc1/auth-js": "workspace:*",
     "@tsndr/cloudflare-worker-jwt": "^2.2.1",
     "date-fns": "^2.29.3",
     "zod": "^3.21.4"
