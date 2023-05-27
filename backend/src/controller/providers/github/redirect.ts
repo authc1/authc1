@@ -12,7 +12,7 @@ const githubRedirectController = async (c: Context) => {
   try {
     const applicationInfo = c.get("applicationInfo") as ApplicationRequest;
     const { github_client_id: clientId } = applicationInfo.providerSettings;
-    const format = c.req.queries("format") || 'redirect';
+    const format = c.req.query("format") || 'redirect';
     const options = {
       clientId,
     };

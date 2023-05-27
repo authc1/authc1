@@ -46,16 +46,6 @@ export async function handleProviderCallback(
     const applicationId = applicationInfo?.id as string;
     const { clientId, clientSecret, providerId } = providerConfig;
 
-    const sessionData = await c.env.AUTHC1_USER_DETAILS.get(sessionId, {
-      type: "json",
-    });
-
-    const { redirect_url: redirectUrl } = sessionData;
-
-    if (!redirectUrl) {
-      return handleError(redirectUrlNotProvidedError, c);
-    }
-
     const { user: providerUser } = await providerApi.users({
       options: { clientSecret, clientId },
       request: c.req as any,
