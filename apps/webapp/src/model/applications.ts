@@ -5,7 +5,7 @@ export const applicationSettingsSchema = z.object({
   expires_in: z.number().optional().nullable(),
   secret: z.string().optional().nullable(),
   algorithm: z.string().optional().nullable(),
-  redirect_uri: z.string().optional().nullable(),
+  redirect_uri: z.array(z.string().url()).optional(),
   password_regex: z.string().optional(),
   two_factor_authentication: z.coerce.boolean().optional(),
   allow_multiple_accounts: z.coerce.boolean().optional(),

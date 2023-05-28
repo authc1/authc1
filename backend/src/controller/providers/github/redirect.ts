@@ -14,7 +14,9 @@ const githubRedirectController = async (c: Context) => {
     const applicationInfo = c.get("applicationInfo") as ApplicationRequest;
     const { github_client_id: clientId } = applicationInfo.providerSettings;
     const format = c.req.query("format") || "redirect";
-    const redirectTo = c.req.query("redirect_to");
+    const redirectTo =
+      c.req.query("redirect_to") ||
+      applicationInfo?.settings?.redirect_uri?.[0];
     const options: BaseProvider.RedirectOptions = {
       options: {
         clientId,
