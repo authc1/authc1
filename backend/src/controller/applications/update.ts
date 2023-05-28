@@ -21,7 +21,7 @@ export const schema = z.object({
       expires_in: z.number().optional(),
       secret: z.string().optional(),
       algorithm: z.string().optional(),
-      redirect_uri: z.string().optional(),
+      redirect_uri: z.array(z.string().url()).optional(),
       two_factor_authentication: z.boolean().optional(),
       allow_multiple_accounts: z.boolean().optional(),
       session_expiration_time: z.number().optional(),

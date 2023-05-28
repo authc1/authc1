@@ -99,8 +99,8 @@ importers:
         specifier: ^3.1.7
         version: 3.1.7
       worker-auth-providers:
-        specifier: 0.0.10-beta11
-        version: 0.0.10-beta11
+        specifier: 0.0.10-beta15
+        version: 0.0.10-beta15
       zod:
         specifier: ^3.21.4
         version: 3.21.4
@@ -6767,8 +6767,8 @@ packages:
     engines: {node: '>=0.10.0'}
     dev: true
 
-  /worker-auth-providers@0.0.10-beta11:
-    resolution: {integrity: sha512-DeeTrcbuwGJ/5/3dXbUuH7XKUVrCPBAPsl+Ezf1ThoCBJOzeT6rBPoraH02V+9MgzSGkjhu7bffMHr8Docf0UQ==}
+  /worker-auth-providers@0.0.10-beta15:
+    resolution: {integrity: sha512-5Q3WYxrFk3scCbMU4jF4/D/YiCaXosupaQDM1DahsdD9YaK4ENzlNkarCIYMio+s6nEBcHoGkN7fGvAvz1NBeA==}
     dependencies:
       '@aws-sdk/client-sns': 3.321.1
       '@tsndr/cloudflare-worker-jwt': 2.2.1

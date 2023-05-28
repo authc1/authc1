@@ -10,29 +10,7 @@ import {
 } from "./error-responses";
 import { generateUniqueIdWithPrefix } from "./string";
 import { createRefreshToken } from "./token";
-
-export interface ProviderUser {
-  id: string;
-  email: string;
-  name: string;
-  avatar_url: string;
-}
-
-interface ProviderRedirectOptions {
-  clientId: string;
-  redirectUri?: string;
-  scope?: string;
-}
-
-interface User {
-  name: string;
-  email: string;
-  provider_id: number;
-  provider_user_id: string;
-  application_id: string;
-  email_verified: number;
-  avatar_url: string;
-}
+import type { BaseProvider } from "worker-auth-providers";
 
 export async function handleProviderCallback(
   c: Context,
@@ -124,12 +102,10 @@ export async function handleProviderCallback(
 export async function providerRedirect(
   c: Context,
   provider: any,
-  options: ProviderRedirectOptions
+  options: BaseProvider.RedirectOptions
 ) {
   try {
-    const location = await provider.redirect({
-      options,
-    });
+    const location = await provider.redirect(options);
 
     return location;
   } catch (e: any) {

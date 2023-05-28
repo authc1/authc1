@@ -13,7 +13,7 @@
     "@tsndr/cloudflare-worker-jwt": "^2.2.1",
     "bcryptjs": "^2.4.3",
     "hono": "^3.1.7",
-    "worker-auth-providers": "0.0.10-beta11",
+    "worker-auth-providers": "0.0.10-beta15",
     "zod": "^3.21.4"
   },
   "devDependencies": {

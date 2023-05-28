@@ -1,34 +1,48 @@
 export interface FormItem {
   key: string;
+  name: string;
   label: string;
   inputType: string;
   onChange?: any;
   editable: boolean;
   column?: boolean;
+  maxInputNumber?: number;
   options?: Array<{ value: string | boolean; label: string }>;
 }
 
 export const settingsFields: FormItem[] = [
   {
     key: "application_id",
+    name: 'application_id',
     label: "Application ID (X-Authc1-Id)",
     inputType: "input",
     editable: false,
   },
   {
-    key: "expires_in",
+    key: "settings.redirect_uri[]",
+    name: "redirect_uri",
+    label: "Redirect URI",
+    inputType: "list",
+    editable: true,
+    maxInputNumber: 3,
+  },
+  {
+    key: "settings.expires_in",
+    name: "expires_in",
     label: "Expires In (in seconds)",
     inputType: "input",
     editable: true,
   },
   {
-    key: "secret",
+    key: "settings.secret",
+    name: "secret",
     label: "Secret",
     inputType: "input",
     editable: false,
   },
   {
-    key: "algorithm",
+    key: "settings.algorithm",
+    name: "algorithm",
     label: "Algorithm",
     inputType: "dropdown",
     editable: false,
@@ -39,29 +53,15 @@ export const settingsFields: FormItem[] = [
     ],
   },
   {
-    key: "redirect_uri",
-    label: "Redirect URI",
-    inputType: "input",
-    editable: true,
-  },
-  {
-    key: "two_factor_authentication",
-    label: "Two Factor Authentication",
-    inputType: "radio",
-    editable: false,
-    options: [
-      { label: "True", value: true },
-      { label: "False", value: false },
-    ],
-  },
-  {
-    key: "session_expiration_time",
+    key: "settings.session_expiration_time",
+    name: "session_expiration_time",
     label: "Session Expiration Time (in seconds)",
     inputType: "input",
     editable: true,
   },
   {
-    key: "allow_multiple_accounts",
+    key: "settings.allow_multiple_accounts",
+    name: "allow_multiple_accounts",
     label: "User account linking",
     inputType: "radio",
     editable: true,
@@ -75,7 +75,8 @@ export const settingsFields: FormItem[] = [
     ],
   },
   {
-    key: "account_deletion_enabled",
+    key: "settings.account_deletion_enabled",
+    name: "account_deletion_enabled",
     label: "Account Deletion Enabled",
     inputType: "radio",
     editable: true,
@@ -85,7 +86,8 @@ export const settingsFields: FormItem[] = [
     ],
   },
   {
-    key: "failed_login_attempts",
+    key: "settings.failed_login_attempts",
+    name: "failed_login_attempts",
     label: "Failed Login Attempts",
     inputType: "input",
     editable: false,

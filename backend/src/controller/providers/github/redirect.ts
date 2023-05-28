@@ -1,5 +1,6 @@
 import { Context } from "hono";
 import { github } from "worker-auth-providers";
+import type { BaseProvider } from "worker-auth-providers";
 import providerRedirect from "../../../utils/auth-provider";
 import {
   clientIdNotProvidedError,
@@ -12,17 +13,21 @@ const githubRedirectController = async (c: Context) => {
   try {
     const applicationInfo = c.get("applicationInfo") as ApplicationRequest;
     const { github_client_id: clientId } = applicationInfo.providerSettings;
-    const format = c.req.query("format") || 'redirect';
-    const options = {
-      clientId,
+    const format = c.req.query("format") || "redirect";
+    const redirectTo = c.req.query("redirect_to");
+    const options: BaseProvider.RedirectOptions = {
+      options: {
+        clientId,
+        redirectTo,
+      },
     };
 
     const redirectUrl = await providerRedirect(c, github, options);
 
-    if(format === 'json') {
+    if (format === "json") {
       return c.json({
-        url: redirectUrl
-      })
+        url: redirectUrl,
+      });
     }
     return c.redirect(redirectUrl);
   } catch (e: any) {

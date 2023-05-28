@@ -1,6 +1,7 @@
 import type { JSXNode } from "@builder.io/qwik";
 import { component$ } from "@builder.io/qwik";
 import type { FormItem } from "~/config/settings";
+import { ListInput } from "./ListInput";
 
 export type CASE = (props: {
   where: boolean;
@@ -34,6 +35,7 @@ export const FormField = component$(
     column,
     options = [],
     defaultValue,
+    maxInputNumber,
   }: any) => {
     return (
       <div class="mb-4" key={key}>
@@ -127,6 +129,19 @@ export const FormField = component$(
               </div>
             )}
           </Case>
+          <Case where={inputType === "list"}>
+            {() => (
+              <ListInput
+                key={key}
+                name={name}
+                onChange$={onChange}
+                editable={editable}
+                label={label}
+                defaultValue={defaultValue}
+                maxInputNumber={maxInputNumber}
+              />
+            )}
+          </Case>
         </Switch>
       </div>
     );
@@ -143,14 +158,18 @@ export default component$(
   }) => {
     return (
       <>
-        {schema.map(({ key, ...rest }): any => (
-          <FormField
-            key={key}
-            name={key}
-            {...rest}
-            defaultValue={defaultValues[key]}
-          />
-        ))}
+        {schema.map(({ key, name, ...rest }) => {
+          const defaultValue = defaultValues?.[name || key];
+
+          return (
+            <FormField
+              key={key}
+              name={key}
+              {...rest}
+              defaultValue={defaultValue}
+            />
+          );
+        })}
       </>
     );
   }

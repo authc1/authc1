@@ -36,6 +36,7 @@ export const useUpdateApplicationAction = routeAction$(
   async (data, { cookie, fail, redirect, params, env }) => {
     const baseUrl = env.get("VITE_API_URL") as string;
     const appId = env.get("VITE_APPLICTION_ID") as string;
+    console.log(data);
     const results = await updateApplicationById(
       data,
       params?.id,
@@ -55,27 +56,36 @@ export const useUpdateApplicationAction = routeAction$(
     name: z.string(),
     logo: z.string().optional(),
     application_id: z.string().optional(),
-    expires_in: z.coerce.number().optional().nullable(),
-    secret: z.string().optional().nullable(),
-    algorithm: z.string().optional().nullable(),
-    redirect_uri: z.string().optional().nullable(),
-    two_factor_authentication: z.union([
-      z.literal("true").transform(() => true),
-      z.literal("false").transform(() => false),
-      z.literal(undefined).transform(() => false),
-    ]),
-    allow_multiple_accounts: z.union([
-      z.literal("true").transform(() => true),
-      z.literal("false").transform(() => false),
-      z.literal(undefined).transform(() => false),
-    ]),
-    session_expiration_time: z.coerce.number().optional().nullable(),
-    account_deletion_enabled: z.union([
-      z.literal("true").transform(() => true),
-      z.literal("false").transform(() => false),
-      z.literal(undefined).transform(() => false),
-    ]),
-    failed_login_attempts: z.coerce.number().optional(),
+    settings: z.object({
+      expires_in: z.coerce.number().optional().nullable(),
+      secret: z.string().optional().nullable(),
+      algorithm: z.string().optional().nullable(),
+      redirect_uri: z
+        .array(z.any())
+        .transform((as) =>
+          as.filter(
+            (a) =>
+              z.string().url({ message: "Invalid url" }).safeParse(a).success
+          )
+        ),
+      two_factor_authentication: z.union([
+        z.literal("true").transform(() => true),
+        z.literal("false").transform(() => false),
+        z.literal(undefined).transform(() => false),
+      ]),
+      allow_multiple_accounts: z.union([
+        z.literal("true").transform(() => true),
+        z.literal("false").transform(() => false),
+        z.literal(undefined).transform(() => false),
+      ]),
+      session_expiration_time: z.coerce.number().optional().nullable(),
+      account_deletion_enabled: z.union([
+        z.literal("true").transform(() => true),
+        z.literal("false").transform(() => false),
+        z.literal(undefined).transform(() => false),
+      ]),
+      failed_login_attempts: z.coerce.number().optional(),
+    }),
   })
 );
 
@@ -93,12 +103,11 @@ export default component$(() => {
       onRejected={() => <FailedToLaod />}
       onResolved={(settings = {}) => {
         const { data } = settings || {};
-
         return (
           <>
             <TabBar />
             {data ? (
-              <div class="max-w-xl lg:px-8 sm:px-8 mt-24 md:mt-8 container">
+              <div class="max-w-xl lg:px-8 sm:px-8 mt-24 md:mt-8 mb-24 container">
                 <h2 class="flex text-2xl font-semibold text-zinc-900 dark:text-zinc-100">
                   Update your Application
                 </h2>
