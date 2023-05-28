@@ -66,35 +66,14 @@ export const updateApplicationById = async (
   id: string,
   cookie: Cookie,
   appId: string,
-  baseUrl: string,
+  baseUrl: string
 ): Promise<any | null> => {
   try {
-    const keys = Object.keys(
-      applicationSettingsSchema.shape
-    ) as (keyof typeof applicationSettingsSchema.shape)[];
-
-    const applicationSettings: {
-      [key in keyof typeof applicationSettingsSchema.shape]?: any;
-    } = {};
-
-    for (const key of keys) {
-      if (
-        !Object.prototype.hasOwnProperty.call(applicationSettingsSchema, key)
-      ) {
-        applicationSettings[key] = updates[key];
-      }
-    }
-
-    const data: ApplicationSchema = applicationSchema.parse({
-      ...updates,
-      settings: applicationSettings,
-    });
-
     const results: any = await callApi(
       {
         endpoint: `/applications/${id}`,
         method: "POST",
-        body: data,
+        body: updates,
       },
       appId,
       baseUrl,
@@ -158,6 +137,6 @@ export const getAllApplicationsProvidersById = async (
     baseUrl,
     cookie
   );
-  console.log('getAllApplicationsProvidersById', data)
+  console.log("getAllApplicationsProvidersById", data);
   return data;
 };

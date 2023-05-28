@@ -26,7 +26,7 @@ export const applicationSettingsUpdateSchema = z
     expires_in: z.number().default(86400),
     secret: z.string().default(() => generateRandomID() + generateRandomID()),
     algorithm: z.string().default("HS256"),
-    redirect_uri: z.string().optional(),
+    redirect_uri: z.array(z.string().url()).optional(),
     two_factor_authentication: z.boolean().default(false),
     allow_multiple_accounts: z.boolean().default(false),
     session_expiration_time: z.number().default(3600),

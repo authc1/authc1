@@ -210,42 +210,49 @@ export default component$(() => {
                     >
                       <SettingsForm schema={item.data} defaultValues={data} />
                       {item?.canCopy && (
-                        <div class="flex items-center mt-8 bg-gray-100 w-max max-w-max rounded-md">
-                          <span class="text-xs font-medium text-gray-900 mx-4">
-                            {baseUrl}/{id}/{item.key}/callback
-                          </span>
-                          <button
-                            data-tooltip-target="default-radio-example-copy-clipboard-tooltip"
-                            data-tooltip-placement="bottom"
-                            type="button"
-                            data-copy-state="copy"
-                            class="flex items-center px-3 py-3 text-xs font-medium text-gray-600 bg-gray-100 border-l rounded-r-md border-gray-200 dark:border-gray-600 dark:text-gray-400 dark:bg-gray-800 hover:text-blue-700 dark:hover:text-white copy-to-clipboard-button"
-                            onClick$={() => {
-                              navigator.clipboard.writeText(
-                                `${baseUrl}/${id}/${item.key}/callback`
-                              );
-                            }}
-                          >
-                            <svg
-                              class="w-4 h-4 mr-2"
-                              fill="none"
-                              stroke="currentColor"
-                              viewBox="0 0 24 24"
-                              xmlns="http://www.w3.org/2000/svg"
+                        <>
+                          <label class="block text-sm text-gray-700 mb-2 mt-8">
+                            Redirect URL
+                          </label>
+                          <div class="flex items-center bg-gray-100 w-max max-w-max rounded-md">
+                            <span class="text-xs font-medium text-gray-900 mx-4">
+                              {baseUrl}/{id}/{item.key}/callback
+                            </span>
+                            <button
+                              data-tooltip-target="default-radio-example-copy-clipboard-tooltip"
+                              data-tooltip-placement="bottom"
+                              type="button"
+                              data-copy-state="copy"
+                              class="flex items-center px-3 py-3 text-xs font-medium text-gray-600 bg-gray-100 border-l rounded-r-md border-gray-200 dark:border-gray-600 dark:text-gray-400 dark:bg-gray-800 hover:text-blue-700 dark:hover:text-white copy-to-clipboard-button"
+                              onClick$={() => {
+                                navigator.clipboard.writeText(
+                                  `${baseUrl}/${id}/${item.key}/callback`
+                                );
+                              }}
                             >
-                              <path
-                                stroke-linecap="round"
-                                stroke-linejoin="round"
-                                stroke-width="2"
-                                d="M8 16H6a2 2 0 01-2-2V6a2 2 0 012-2h8a2 2 0 012 2v2m-6 12h8a2 2 0 002-2v-8a2 2 0 00-2-2h-8a2 2 0 00-2 2v8a2 2 0 002 2z"
-                              ></path>
-                            </svg>
-                            <span class="copy-text">Copy</span>
-                          </button>
-                        </div>
+                              <svg
+                                class="w-4 h-4 mr-2"
+                                fill="none"
+                                stroke="currentColor"
+                                viewBox="0 0 24 24"
+                                xmlns="http://www.w3.org/2000/svg"
+                              >
+                                <path
+                                  stroke-linecap="round"
+                                  stroke-linejoin="round"
+                                  stroke-width="2"
+                                  d="M8 16H6a2 2 0 01-2-2V6a2 2 0 012-2h8a2 2 0 012 2v2m-6 12h8a2 2 0 002-2v-8a2 2 0 00-2-2h-8a2 2 0 00-2 2v8a2 2 0 002 2z"
+                                ></path>
+                              </svg>
+                              <span class="copy-text">Copy</span>
+                            </button>
+                          </div>
+                        </>
                       )}
                       <div class="flex pt-2 justify-between items-center mt-8">
-                        <p class="text-sm font-medium text-zinc-800 dark:text-zinc-200">Learn more</p>
+                        <p class="text-sm font-medium text-zinc-800 dark:text-zinc-200">
+                          Learn more
+                        </p>
                         <Button label="Save" isRunning={false} type="submit" />
                       </div>
                     </ProviderListItem>
