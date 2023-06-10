@@ -33,6 +33,7 @@ export interface Session {
   expiresAt: number;
   emailVerified: boolean;
   localId: string;
+  sessionId: string;
 }
 
 export interface RegisterResult {
@@ -59,6 +60,7 @@ export interface RefreshTokenResponse {
   local_id: string;
   expires_at: number;
   email_verified: boolean;
+  session_id: string;
 }
 
 export interface EmailAuthClientOptions {

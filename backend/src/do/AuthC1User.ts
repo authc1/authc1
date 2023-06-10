@@ -50,7 +50,8 @@ export type AccessedApp = z.infer<typeof accessedAppSchema>;
 
 export type AuthResponse = {
   accessToken: string;
-  refreshToken: string;
+  refreshToken?: string;
+  user?: UserData
 };
 
 export class AuthC1User implements DurableObject {
@@ -421,6 +422,7 @@ export class AuthC1User implements DurableObject {
 
       return c.json({
         accessToken,
+        user: this.userData
       });
     });
   }

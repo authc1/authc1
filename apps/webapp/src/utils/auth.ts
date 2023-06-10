@@ -4,7 +4,6 @@ import type { ErrorResponse } from "./fetch";
 import type { JwtUser } from "~/types";
 export const AUTHTOKEN_NAME: string = "fugit.app:user";
 
-
 import { createAuthc1Client } from "./authc1-client";
 import type {
   ConfirmResetPasswordOptions,
@@ -127,6 +126,43 @@ export const signOut = async (
   const client = createAuthc1Client(cookie, appId, baseUrl);
   await client.logout();
   return null;
+};
+
+export const getRedirectUrl = (
+  cookie: Cookie,
+  appId: string,
+  baseUrl: string,
+  provider: string
+) => {
+  const client = createAuthc1Client(cookie, appId, baseUrl);
+  const url = client.getRedirectUrl({ provider });
+  return url;
+};
+
+export const getSession = (
+  cookie: Cookie,
+  appId: string,
+  baseUrl: string
+): Session | undefined => {
+  const client = createAuthc1Client(cookie, appId, baseUrl);
+  const session = client.getSession();
+  return session;
+};
+
+export const getRedirectResult = async (
+  url: string,
+  cookie: Cookie,
+  appId: string,
+  baseUrl: string
+): Promise<Session> => {
+  try {
+    const client = createAuthc1Client(cookie, appId, baseUrl);
+    const data = await client.getRedirectResult(url);
+    return data;
+  } catch (e: any) {
+    console.log(e);
+    return e;
+  }
 };
 
 export interface JwtPayloadToUser {

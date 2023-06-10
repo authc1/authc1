@@ -1,6 +1,6 @@
 export interface FormItem {
   key: string;
-  name: string;
+  name?: string;
   label: string;
   inputType: string;
   onChange?: any;

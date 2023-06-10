@@ -312,6 +312,22 @@ export const redirectUrlNotProvidedError: ErrorResponse = {
   status: 500,
 };
 
+export const redirectUrlNotValid: ErrorResponse = {
+  error: {
+    code: "REDIRECT_URL_NOT_VALID",
+    message: "Invalid redirect URL.",
+  },
+  status: 500,
+};
+
+export const redirectUrlRequired: ErrorResponse = {
+  error: {
+    code: "REDIRECT_URL_REQUIRED",
+    message: "At least one redirect URL is required.",
+  },
+  status: 500,
+};
+
 export const redirectFailedError: ErrorResponse = {
   error: {
     code: "REDIRECT_FAILED",

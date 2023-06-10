@@ -6,6 +6,8 @@ import {
   clientIdNotProvidedError,
   handleError,
   redirectFailedError,
+  redirectUrlNotValid,
+  redirectUrlRequired,
 } from "../../../utils/error-responses";
 import { ApplicationRequest } from "../../applications/create";
 
@@ -14,24 +16,32 @@ const githubRedirectController = async (c: Context) => {
     const applicationInfo = c.get("applicationInfo") as ApplicationRequest;
     const { github_client_id: clientId } = applicationInfo.providerSettings;
     const format = c.req.query("format") || "redirect";
-    const redirectTo =
-      c.req.query("redirect_to") ||
-      applicationInfo?.settings?.redirect_uri?.[0];
     const options: BaseProvider.RedirectOptions = {
       options: {
         clientId,
-        redirectTo,
       },
     };
 
-    const redirectUrl = await providerRedirect(c, github, options);
+    const allowedRedirectUrls: string[] = applicationInfo?.settings?.redirect_uri || [];
+    const redirectUrl = c.req.query("redirect_url") as string || allowedRedirectUrls[0];
+    const isAllowedRedirectUrl = allowedRedirectUrls.includes(redirectUrl);
+
+    if (!allowedRedirectUrls.length) {
+      return handleError(redirectUrlRequired, c);
+    }
+
+    if (!isAllowedRedirectUrl) {
+      return handleError(redirectUrlNotValid, c);
+    }
+
+    const url = await providerRedirect(c, github, options);
 
     if (format === "json") {
       return c.json({
-        url: redirectUrl,
+        url: url,
       });
     }
-    return c.redirect(redirectUrl);
+    return c.redirect(url);
   } catch (e: any) {
     console.log("error", e.message);
     if (e.message === "No client id passed") {

@@ -61,12 +61,15 @@ export class EmailAuthClient {
         localId: result.local_id,
         expiresAt: result.expires_at,
         emailVerified: result.email_verified,
+        sessionId: result.session_id,
       };
+
       this.setSession(session);
       this.eventEmitter.emit(AuthEvent.SIGNED_IN, {
         userId: result.local_id,
         session: result.session_id,
       });
+
       if (callback) {
         callback(null, result);
       }

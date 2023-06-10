@@ -12,8 +12,10 @@ import type {
   Session,
 } from "./types";
 import { post } from "./utils/http";
+import PopupWindow, { PopupWindowOptions } from "./auth/PopupWindow";
+import { parseQueryParams } from "./utils/query";
 export { StorageManager, Storage } from "./utils/storage";
-export * from './types';
+export * from "./types";
 
 export type AuthStateChangedSubscription = {
   unsubscribe: () => void;
@@ -25,6 +27,24 @@ export interface Authc1ClientOptions {
   baseUrl?: string;
 }
 
+export interface OAuthResponse {
+  access_token: string;
+  refresh_token: string;
+  expires_in: number;
+}
+
+export type SignInOAuthOptions = {
+  provider: string;
+  options?: {
+    scopes?: string[];
+    redirect?: boolean;
+    redirectTo?: string;
+    width?: number;
+    height?: number;
+    id?: string;
+  };
+};
+
 export class Authc1Client {
   private readonly eventEmitter: EventEmitter;
   private readonly storage: Storage;
@@ -32,6 +52,7 @@ export class Authc1Client {
   private readonly sessionKey: string;
   private readonly endpoint: string;
   private readonly options: Authc1ClientOptions;
+  private popupWindow: Window | null = null;
 
   constructor(appId: string, options: Authc1ClientOptions = {}) {
     const apiBaseUrl = options?.baseUrl ?? "https://api.authc1.com/v1";
@@ -70,6 +91,105 @@ export class Authc1Client {
     return url.toString();
   }
 
+  public getRedirectUrl(data: SignInOAuthOptions): string {
+    const { provider, options = {} } = data;
+    const { scopes, redirectTo } = options;
+    const redirectUrl = `${this.endpoint}/${provider}/redirect`;
+    const url = new URL(redirectUrl);
+
+    if (scopes) {
+      url.searchParams.append("scopes", scopes.join(" "));
+    }
+
+    if (redirectTo) {
+      url.searchParams.append("redirectTo", redirectTo);
+    }
+    return url.toString();
+  }
+
+  public async signInWithOAuth(data: SignInOAuthOptions): Promise<Session> {
+    const { provider, options } = data;
+    const {
+      scopes,
+      redirect,
+      redirectTo,
+      height = 600,
+      width = 500,
+      id = "AuthC1",
+    } = options;
+
+    const redirectUrl = `${this.endpoint}/${provider}/redirect`;
+    const url = new URL(redirectUrl);
+
+    if (scopes) {
+      url.searchParams.append("scopes", scopes.join(" "));
+    }
+
+    if (redirectTo) {
+      url.searchParams.append("redirectTo", redirectTo);
+    }
+
+    if (redirect) {
+      window.location.href = url.toString();
+    } else {
+      return this.openPopup({ height, width }, url.toString(), id);
+    }
+  }
+
+  private openPopup = (
+    options: PopupWindowOptions,
+    url: string,
+    id: string
+  ): Promise<Session> => {
+    return new Promise<Session>(async (resolve, reject) => {
+      const popup = PopupWindow.open(url, id, options);
+
+      popup.then(resolve, reject);
+    });
+  };
+
+  public async getRedirectResult(
+    url: string = window.location.href
+  ): Promise<Session> {
+    const params = parseQueryParams(url);
+
+    console.log("params-------------------", params);
+
+    if (params.error) {
+      const error = params.error;
+      const errorDescription = params.error_description || "Unknown error";
+
+      throw new Error(`Authentication error: ${error} - ${errorDescription}`);
+    }
+
+    if (!params.access_token || !params.refresh_token) {
+      throw new Error("Invalid redirect callback");
+    }
+
+    const session: Session = {
+      accessToken: params.access_token,
+      refreshToken: params.refresh_token,
+      expiresIn: parseInt(params.expires_in),
+      expiresAt: parseInt(params.expires_at),
+      emailVerified: params.email_verified === "true",
+      localId: params.local_id,
+      sessionId: params.session_id
+    };
+
+    this.setSession(session);
+    this.eventEmitter.emit(AuthEvent.SIGNED_IN, {
+      userId: session?.localId,
+      session: session?.sessionId,
+    });
+
+    if (typeof window !== "undefined") {
+      const baseUrl = url.split('?')[0];
+      window.history.replaceState({}, document.title, baseUrl);
+    }
+
+    return session;
+  }
+
   public async signInWithEmail({
     email,
     password,
@@ -83,6 +203,7 @@ export class Authc1Client {
         localId: result.local_id,
         expiresAt: result.expires_at,
         emailVerified: result.email_verified,
+        sessionId: result.session_id
       };
       return session;
     } catch (err) {
@@ -223,8 +344,9 @@ export class Authc1Client {
       localId: response.data.local_id,
       expiresAt: response.data.expires_at,
       emailVerified: response.data.email_verified,
+      sessionId: response.data.session_id,
     };
-    await this.setSession(session);
+    this.setSession(session);
     return session;
   }
 
