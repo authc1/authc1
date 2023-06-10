@@ -1,8 +1,12 @@
 import { component$, Slot } from "@builder.io/qwik";
 import { routeAction$, routeLoader$, useLocation } from "@builder.io/qwik-city";
 import Header from "~/components/Header";
-import { decodeAccessToken, signOut } from "~/utils/auth";
-import { getAccessTokenFromCookie } from "~/utils/fetch";
+import {
+  decodeAccessToken,
+  getRedirectResult,
+  getSession,
+  signOut,
+} from "~/utils/auth";
 
 const excludedPaths = ["/login", "/register", "/pricing", "/reset"];
 
@@ -15,12 +19,20 @@ const shouldRedirect = (pathname: string, excludedPaths: string[]): boolean => {
 };
 
 export const userAuthStateLoader = routeLoader$(
-  ({ cookie, cacheControl, redirect, pathname, env }) => {
+  async ({ cookie, cacheControl, redirect, pathname, env, url, query }) => {
     const appId = env.get("VITE_APPLICTION_ID") as string;
     const baseUrl = env.get("VITE_API_URL") as string;
-    const authState = getAccessTokenFromCookie(cookie, appId, baseUrl);
-    if (authState?.access_token) {
-      const decodedToken = decodeAccessToken(authState?.access_token);
+    const token = query.get("access_token");
+    console.log("-------------------------->", token, url.toString());
+    if (token) {
+      await getRedirectResult(url.toString(), cookie, appId, baseUrl);
+      throw redirect(302, '/dashboard');
+    }
+
+    const authState = getSession(cookie, appId, baseUrl);
+
+    if (authState?.accessToken) {
+      const decodedToken = decodeAccessToken(authState?.accessToken);
 
       if (!decodedToken?.email_verified && !pathname.includes("/verify/")) {
         throw redirect(302, "/verify");
@@ -36,7 +48,7 @@ export const userAuthStateLoader = routeLoader$(
 
       return {
         loggedIn: true,
-        accessToken: authState?.access_token,
+        accessToken: authState?.accessToken,
         userName: decodedToken?.name,
         email: decodedToken?.email,
       };

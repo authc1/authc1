@@ -24,6 +24,16 @@ export async function handleProviderCallback(
     const applicationId = applicationInfo?.id as string;
     const { clientId, clientSecret, providerId } = providerConfig;
 
+    const sessionData = await c.env.AUTHC1_USER_DETAILS.get(sessionId, {
+      type: "json",
+    });
+
+    const { redirect_url: redirectUrl } = sessionData;
+
+    if (!redirectUrl) {
+      return handleError(redirectUrlNotProvidedError, c);
+    }
+
     const { user: providerUser } = await providerApi.users({
       options: { clientSecret, clientId },
       request: c.req as any,
@@ -40,6 +50,9 @@ export async function handleProviderCallback(
     const userClient = new UserClient(stub);
     const userData = await userClient.getUser();
     const refreshToken = createRefreshToken(c);
+
+    const expiresIn = applicationInfo.settings.expires_in;
+    const expiresAt = Math.floor(Date.now() / 1000) + applicationInfo.settings.expires_in
 
     if (userData?.id) {
       const promises = await Promise.all([
@@ -59,7 +72,7 @@ export async function handleProviderCallback(
       const { accessToken } = authDetails;
 
       return c.redirect(
-        `${redirectUrl}?access_token=${accessToken}&refresh_token=${refreshToken}`
+        `${redirectUrl}?access_token=${accessToken}&refresh_token=${refreshToken}&session_id=${sessionId}&local_id=${userData?.id}&email_verified=${userData?.emailVerified}&expires_at=${expiresAt}&expires_in=${expiresIn}`
       );
     } else {
       const userData: UserData = {
@@ -90,7 +103,7 @@ export async function handleProviderCallback(
       const { accessToken, refreshToken } = authDetails as AuthResponse;
 
       return c.redirect(
-        `${redirectUrl}?access_token=${accessToken}?refresh_token=${refreshToken}`
+        `${redirectUrl}?access_token=${accessToken}?refresh_token=${refreshToken}&session_id=${sessionId}&local_id=${userData?.id}&email_verified=${userData?.emailVerified}&expires_at=${expiresAt}&expires_in=${expiresIn}`
       );
     }
   } catch (e: any) {
@@ -105,7 +118,19 @@ export async function providerRedirect(
   options: BaseProvider.RedirectOptions
 ) {
   try {
+    const applicationInfo = c.get("applicationInfo") as ApplicationRequest;
     const location = await provider.redirect(options);
+    const sessionId = c.get("sessionId") as string;
+    const redirectUrl = c.req.query("redirect_url") as string;
+    const allowedRedirectUrls: string[] =
+      applicationInfo?.settings?.redirect_uri || [];
+
+    await c.env.AUTHC1_USER_DETAILS.put(
+      sessionId,
+      JSON.stringify({
+        redirect_url: redirectUrl || allowedRedirectUrls[0],
+      })
+    );
 
     return location;
   } catch (e: any) {

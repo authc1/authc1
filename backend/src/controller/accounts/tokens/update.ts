@@ -45,7 +45,7 @@ export const updateAccessTokenByRefreshToken = async (c: Context) => {
     const userObjId = c.env.AuthC1User.idFromString(tokenInfo.userId);
     const userStub = c.env.AuthC1User.get(userObjId);
     const userClient = new UserClient(userStub);
-    const { accessToken } = await userClient.refreshToken(
+    const { accessToken, user } = await userClient.refreshToken(
       tokenInfo.sessionId,
       applicationInfo
     );
@@ -58,6 +58,9 @@ export const updateAccessTokenByRefreshToken = async (c: Context) => {
       expires_in: expiresIn,
       expires_at:
         Math.floor(Date.now() / 1000) + applicationInfo.settings.expires_in,
+      session_id: tokenInfo.sessionId,
+      local_id: tokenInfo?.userId,
+      email_verified: user?.emailVerified,
     });
   } catch (err: any) {
     console.log(err);

@@ -1,9 +1,4 @@
 import type { Cookie } from "@builder.io/qwik-city";
-import {
-  applicationSchema,
-  applicationSettingsSchema,
-} from "~/model/applications";
-import type { ApplicationSchema } from "~/model/applications";
 import { callApi } from "./fetch";
 
 interface Application {

@@ -10,7 +10,6 @@ import { ApplicationRequest } from "../../applications/create";
 const githubCallbackController = async (c: Context) => {
   try {
     const applicationInfo = c.get("applicationInfo") as ApplicationRequest;
-
     const { github_client_id: clientId, github_client_secret: clientSecret } =
       applicationInfo.providerSettings;
     const providerConfig = { clientSecret, clientId, providerId: 2 };
