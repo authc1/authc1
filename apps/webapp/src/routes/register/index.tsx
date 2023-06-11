@@ -6,6 +6,7 @@ import { register } from "~/utils/auth";
 import type { ErrorResponse } from "~/utils/fetch";
 import { RegisterHero } from "~/components/icons/register-hero";
 import Button from "~/components/button";
+import { showNotification } from "~/utils/notification";
 
 export const useRegisterAction = routeAction$(
   async (data, { cookie, fail, redirect, env }) => {
@@ -27,11 +28,17 @@ export const useRegisterAction = routeAction$(
       appId,
       baseUrl
     );
+
     if ((result as ErrorResponse)?.error) {
       return fail(403, {
         message: (result as ErrorResponse)?.error?.message,
       });
     }
+
+    showNotification(
+      "User created successfully! Please log in to get started.",
+      "success"
+    );
 
     throw redirect(302, "/");
   },
