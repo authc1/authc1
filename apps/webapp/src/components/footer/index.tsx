@@ -39,13 +39,13 @@ export default component$(() => {
             <div class="flex flex-col items-center justify-between gap-6 sm:flex-row">
               <div class="flex gap-6">
                 <SocialLink
-                  href="https://twitter.com/authc1"
+                  href="https://github.com/subhendukundu/authc1"
                   aria-label="Follow on Twitter"
                 >
                   <GitHubIcon />
                 </SocialLink>
                 <SocialLink
-                  href="https://github.com/authc1"
+                  href="https://twitter.com/authc1_com"
                   aria-label="Follow on GitHub"
                 >
                   <TwitterIcon />
