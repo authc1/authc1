@@ -128,9 +128,9 @@ export default component$(() => {
               OR CONTINUE WITH
             </p>
           </div>
-          <button
+          <a
             class="inline-flex items-center justify-center rounded-md text-sm font-medium transition-colors ring-offset-background border border-input hover:bg-zinc-700/[0.25] h-10 py-2 px-4 dark:text-white w-full mt-2"
-            type="button"
+            href={url}
           >
             <svg viewBox="0 0 438.549 438.549" class="mr-2 h-4 w-4">
               <path
@@ -139,10 +139,7 @@ export default component$(() => {
               ></path>
             </svg>
             Github
-          </button>
-          <div>
-            <a href={url}>Github</a>
-          </div>
+          </a>
         </Form>
         <div class="flex-1 lg:max-w-lg lg:mx-auto mt-16">
           <LoginHero />
