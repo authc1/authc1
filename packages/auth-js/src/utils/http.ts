@@ -1,6 +1,5 @@
 import { HttpResponse } from "../types";
 
-
 export async function get<T>(url: string, token?: string): Promise<HttpResponse<T>> {
   const headers: { [key: string]: string } = {
     "Content-Type": "application/json"
@@ -14,12 +13,12 @@ export async function get<T>(url: string, token?: string): Promise<HttpResponse<
     headers: headers,
   });
   const data = await response.json();
-  return { data, status: response.status, statusText: response.statusText };
+  return { data: data as T, status: response.status, statusText: response.statusText };
 }
 
 export async function post<T>(
   url: string,
-  data: any,
+  data: unknown,
   token?: string
 ): Promise<HttpResponse<T>> {
   const headers: { [key: string]: string } = {
@@ -36,7 +35,7 @@ export async function post<T>(
   });
   const responseData = await response.json();
   return {
-    data: responseData,
+    data: responseData as T,
     status: response.status,
     statusText: response.statusText,
   };

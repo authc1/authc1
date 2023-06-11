@@ -10,6 +10,7 @@ import type {
   ForgetPasswordOptions,
   LoginRequest,
   RegisterRequest,
+  RegisterResult,
   Session,
 } from "@authc1/auth-js/src/types";
 
@@ -47,7 +48,7 @@ export const register = async (
   cookie: Cookie,
   appId: string,
   baseUrl: string
-): Promise<Session | ErrorResponse> => {
+): Promise<RegisterResult | ErrorResponse> => {
   try {
     const client = createAuthc1Client(cookie, appId, baseUrl);
     const data = await client.registerWithEmail({ name, email, password });

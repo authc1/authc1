@@ -5,16 +5,17 @@ import type {
   AuthCallback,
   ConfirmResetPasswordOptions,
   ForgetPasswordOptions,
-  HttpResponse,
   LoginRequest,
   RefreshTokenResponse,
   RegisterRequest,
+  RegisterResult,
   Session,
 } from "./types";
 import { post } from "./utils/http";
 import PopupWindow, { PopupWindowOptions } from "./auth/PopupWindow";
 import { parseQueryParams } from "./utils/query";
-export { StorageManager, Storage } from "./utils/storage";
+export { StorageManager } from "./utils/storage";
+export type { Storage } from "./utils/storage";
 export * from "./types";
 
 export type AuthStateChangedSubscription = {
@@ -47,7 +48,7 @@ export type SignInOAuthOptions = {
 
 export class Authc1Client {
   private readonly eventEmitter: EventEmitter;
-  private readonly storage: Storage;
+  private readonly storage: StorageManager;
   private readonly emailAuthClient: EmailAuth.EmailAuthClient;
   private readonly sessionKey: string;
   private readonly endpoint: string;
@@ -65,7 +66,7 @@ export class Authc1Client {
       storage: options.storage || localStorage,
     };
     const storage = new StorageManager({
-      storageType: this.options.storage,
+      storageType: this.options.storage as Storage,
     });
     const eventEmitter = new EventEmitter(appId, storage, sessionKey);
     this.eventEmitter = eventEmitter;
@@ -93,11 +94,11 @@ export class Authc1Client {
 
   public getRedirectUrl(data: SignInOAuthOptions): string {
     const { provider, options = {} } = data;
-    const { scopes, redirectTo } = options;
+    const { scopes = [], redirectTo } = options;
     const redirectUrl = `${this.endpoint}/${provider}/redirect`;
     const url = new URL(redirectUrl);
 
-    if (scopes) {
+    if (scopes?.length) {
       url.searchParams.append("scopes", scopes.join(" "));
     }
 
@@ -107,10 +108,12 @@ export class Authc1Client {
     return url.toString();
   }
 
-  public async signInWithOAuth(data: SignInOAuthOptions): Promise<Session> {
-    const { provider, options } = data;
+  public async signInWithOAuth(
+    data: SignInOAuthOptions
+  ): Promise<Session | undefined> {
+    const { provider, options = {} } = data;
     const {
-      scopes,
+      scopes = [],
       redirect,
       redirectTo,
       height = 600,
@@ -121,7 +124,7 @@ export class Authc1Client {
     const redirectUrl = `${this.endpoint}/${provider}/redirect`;
     const url = new URL(redirectUrl);
 
-    if (scopes) {
+    if (scopes?.length) {
       url.searchParams.append("scopes", scopes.join(" "));
     }
 
@@ -132,7 +135,12 @@ export class Authc1Client {
     if (redirect) {
       window.location.href = url.toString();
     } else {
-      return this.openPopup({ height, width }, url.toString(), id);
+      const session = await this.openPopup(
+        { height, width },
+        url.toString(),
+        id
+      );
+      return session;
     }
   }
 
@@ -141,7 +149,7 @@ export class Authc1Client {
     url: string,
     id: string
   ): Promise<Session> => {
-    return new Promise<Session>(async (resolve, reject) => {
+    return new Promise<Session>(async (resolve: any, reject) => {
       const popup = PopupWindow.open(url, id, options);
 
       popup.then(resolve, reject);
@@ -173,7 +181,7 @@ export class Authc1Client {
       expiresAt: parseInt(params.expires_at),
       emailVerified: params.email_verified === "true",
       localId: params.local_id,
-      sessionId: params.session_id
+      sessionId: params.session_id,
     };
 
     this.setSession(session);
@@ -183,7 +191,7 @@ export class Authc1Client {
     });
 
     if (typeof window !== "undefined") {
-      const baseUrl = url.split('?')[0];
+      const baseUrl = url.split("?")[0];
       window.history.replaceState({}, document.title, baseUrl);
     }
 
@@ -202,8 +210,8 @@ export class Authc1Client {
         expiresIn: result.expires_in,
         localId: result.local_id,
         expiresAt: result.expires_at,
-        emailVerified: result.email_verified,
-        sessionId: result.session_id
+        emailVerified: result.email_verified as boolean,
+        sessionId: result.session_id,
       };
       return session;
     } catch (err) {
@@ -215,22 +223,20 @@ export class Authc1Client {
     name,
     email,
     password,
-  }: RegisterRequest): Promise<Session> {
+  }: RegisterRequest): Promise<RegisterResult> {
     try {
-      await this.emailAuthClient.register({ name, email, password });
+      return this.emailAuthClient.register({ name, email, password });
     } catch (err) {
       throw err;
     }
-    return;
   }
 
   public async sendEmailVerification(): Promise<void> {
     try {
-      await this.emailAuthClient.sendVerificationEmail();
+      return this.emailAuthClient.sendVerificationEmail();
     } catch (err) {
       throw err;
     }
-    return;
   }
 
   public async forgetEmailPassword(
@@ -303,17 +309,19 @@ export class Authc1Client {
   public onAuthStateChange(
     handler: (event: AuthEvent, session: any) => void
   ): AuthStateChangedSubscription {
-    for (const event in AuthEvent) {
-      this.eventEmitter.on(AuthEvent[event], (session: any) => {
-        handler(AuthEvent[event], session);
+    const events = Object.values(AuthEvent) as AuthEvent[];
+  
+    for (const event of events) {
+      this.eventEmitter.on(event, (session: any) => {
+        handler(event, session);
       });
     }
-
+  
     return {
       unsubscribe: () => {
-        for (const event in AuthEvent) {
-          this.eventEmitter.off(AuthEvent[event], (session: any) => {
-            handler(AuthEvent[event], session);
+        for (const event of events) {
+          this.eventEmitter.off(event, (session: any) => {
+            handler(event, session);
           });
         }
       },
@@ -331,7 +339,7 @@ export class Authc1Client {
 
   public async refreshAccessToken(): Promise<Session> {
     const sessionData = this.storage.getItem(this.sessionKey);
-    const parsedSession = JSON.parse(sessionData);
+    const parsedSession = sessionData ? JSON.parse(sessionData) : {};
     const data = {
       refresh_token: parsedSession.refreshToken,
     };

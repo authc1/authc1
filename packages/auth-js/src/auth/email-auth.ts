@@ -60,7 +60,7 @@ export class EmailAuthClient {
         expiresIn: result.expires_in,
         localId: result.local_id,
         expiresAt: result.expires_at,
-        emailVerified: result.email_verified,
+        emailVerified: result.email_verified as boolean,
         sessionId: result.session_id,
       };
 
@@ -108,7 +108,7 @@ export class EmailAuthClient {
     callback?: AuthCallback<any>
   ): Promise<any> {
     const url = `${this.endpoint}/email/verify`;
-    const response = await post(url, null, this.session.accessToken);
+    const response = await post(url, null, this.session?.accessToken);
     if (response.status === 200) {
       const result = response.data;
       if (callback) {
@@ -129,7 +129,7 @@ export class EmailAuthClient {
     callback?: AuthCallback<any>
   ): Promise<any> {
     const url = `${this.endpoint}/email/confirm`;
-    const response = await post(url, { code }, this.session.accessToken);
+    const response = await post(url, { code }, this.session?.accessToken);
     if (response.status === 200) {
       const result = response.data;
       if (callback) {
