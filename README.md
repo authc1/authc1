@@ -86,10 +86,10 @@ const subscription = client.onAuthStateChange((event, session) => {
 // Unsubscribe from auth state changes
 subscription.unsubscribe();
 ```
-For more information on how to use `@authc1/auth-js`, please see the documentation
+For more information on how to use `@authc1/auth-js`, please see the [documentation](https://docs.authc1.com)
 
 ## API Reference
-For detailed API reference and examples, please see the documentation
+For detailed API reference and examples, please see the [documentation](https://docs.authc1.com)
 
 ## Contributing
 We welcome contributions to Authc1! Please see CONTRIBUTING.md for more information on how to get involved.
