@@ -6,7 +6,6 @@ import { Authc1Client } from "../../../../packages/auth-js/src/index";
 const createCookieStorageManager = (cookie: Cookie): Storage => {
   return {
     setItem(key: string, value: string): void {
-      console.log("createCookieStorageManager", key, value);
       const options = {
         httpOnly: true,
         maxAge: 3600,
