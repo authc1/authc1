@@ -91,6 +91,32 @@ For more information on how to use `@authc1/auth-js`, please see the [documentat
 ## API Reference
 For detailed API reference and examples, please see the [documentation](https://docs.authc1.com)
 
+## Roadmap
+
+Welcome to our project's roadmap! Here, we outline our upcoming plans and developments for supporting more providers and SDKs for various frameworks. Our aim is to continuously expand our product's capabilities and offer a seamless experience to our users. Below are the key milestones we have identified for the near future:
+
+### Upcoming Plans
+
+1. **Provider Expansion:** Our first priority is to extend support for additional authentication and authorization providers. We will be working on integrating popular providers like Microsoft Azure Active Directory, Okta, and Auth0. This will empower our users to connect with a broader range of authentication services and choose the one that best fits their needs.
+
+2. **SDK Integration:** We understand the importance of providing easy-to-use software development kits (SDKs) for various platforms. In this regard, we will be developing SDKs tailored for different programming languages and platforms. Our initial focus will be on creating SDKs for Java, Python, and .NET, enabling developers to seamlessly integrate our authentication system into their applications.
+
+3. **Flutter Support:** We recognize the growing demand for mobile app development using Flutter, and it is one of our top priorities. We are excited to announce that we will be actively working on providing full support for Flutter-based applications. Developers will be able to utilize our authentication and authorization services directly within their Flutter projects with ease.
+
+4. **Documentation and Tutorials:** Clear and comprehensive documentation is crucial for the success of any project. We are committed to enhancing our documentation by providing detailed guides and tutorials to facilitate the integration of our services into various frameworks. This will help developers to get started quickly and make the most of our offerings.
+
+5. **Improved Security and Compliance:** Security is paramount to us, and we are dedicated to continually improving the security measures of our authentication system. Additionally, we will focus on ensuring compliance with industry standards and regulations to guarantee the protection of our users' data and privacy.
+
+### Long-term Vision
+
+Looking further ahead, we have a long-term vision to make our authentication solution a universal choice for developers across all platforms. This includes expanding support for emerging providers, keeping our SDKs up-to-date with the latest advancements in technology, and staying at the forefront of security best practices.
+
+We value feedback from our community and encourage you to share your thoughts and ideas with us. As we progress through our roadmap, we will be transparent about our developments and milestones. Stay tuned for updates, exciting new features, and more as we work towards building a robust and versatile authentication and authorization system.
+
+Thank you for your continued support on this journey!
+
+*Note: This roadmap is subject to change based on various factors, including user feedback, technological advancements, and market trends.*
+
 ## Contributing
 We welcome contributions to Authc1! Please see CONTRIBUTING.md for more information on how to get involved.
 
