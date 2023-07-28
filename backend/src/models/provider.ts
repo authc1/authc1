@@ -51,7 +51,7 @@ export const ProviderSettingsSchema = z.object({
   apple_key_id: z.string(),
   apple_client_id: z.string(),
   apple_private_key: z.string(),
-  apple_scope: z.string(),
+  apple_scope: z.array(z.string()),
   apple_redirect_uri: z.string(),
 
   github_provider_enabled: z.boolean(),

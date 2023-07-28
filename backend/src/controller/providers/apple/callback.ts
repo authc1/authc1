@@ -8,20 +8,6 @@ import { handleProviderCallback } from "../../../utils/auth-provider";
 import { ApplicationRequest } from "../../applications/create";
 import { convertPrivateKeyToClientSecret } from "worker-auth-providers/dist/providers/apple/users";
 
-/* const privateKey = `-----BEGIN PRIVATE KEY-----
-MIGTAgEAMBMGByqGSM49AgEGCCqGSM49AwEHBHkwdwIBAQQg6RUEoafsJBczqZGU
-jv6L/1ovkeys9dXDsswF9htbEd6gCgYIKoZIzj0DAQehRANCAAQXb2xQnJvP8AiE
-9vZf3gzUNKi+FPHCK/LJa3uFlYoB9yISIA/SpXfu2pSuLDi4vQwiqbXPX5jDJhvy
-vBeWzzvv
------END PRIVATE KEY-----`;
-const secret = await convertPrivateKeyToClientSecret({
-      privateKey,
-      keyIdentifier: "722R6K55K7",
-      teamId: "F5SZLQKVH8",
-      clientId: "com.authc1.local",
-      expAfter: 3600,
-    });
- */
 const appleCallbackController = async (c: Context) => {
   try {
     const applicationInfo = c.get("applicationInfo") as ApplicationRequest;
