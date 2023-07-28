@@ -4,7 +4,7 @@
   "scripts": {
     "start": "echo 'No build script for this package'",
     "build": "echo 'No build script for this package'",
-    "dev": "npx wrangler dev --local --persist",
+    "dev": "npx wrangler dev --local",
     "deploy": "npx wrangler publish src/index.ts"
   },
   "dependencies": {
@@ -13,7 +13,9 @@
     "@tsndr/cloudflare-worker-jwt": "^2.2.1",
     "bcryptjs": "^2.4.3",
     "hono": "^3.1.7",
-    "worker-auth-providers": "0.0.10-beta15",
+    "jose": "^4.14.4",
+    "query-string": "^8.1.0",
+    "worker-auth-providers": "0.0.10-beta17",
     "zod": "^3.21.4"
   },
   "devDependencies": {

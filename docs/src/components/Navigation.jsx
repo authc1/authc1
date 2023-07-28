@@ -197,7 +197,14 @@ export const navigation = [
     title: 'API Reference',
     links: [
       { title: 'Email', href: '/email' },
+      { title: 'Socials', href: '/socials' },
       { title: 'Accounts', href: '/accounts' },
+    ],
+  },
+  {
+    title: 'Providers',
+    links: [
+      { title: 'Supported Providers', href: '/providers' },
     ],
   },
 ]

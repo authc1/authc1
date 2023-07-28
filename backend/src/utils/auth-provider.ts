@@ -82,7 +82,7 @@ export async function handleProviderCallback(
         email,
         provider: providerId,
         emailVerified: true,
-        avatarUrl: avatarUrl as string,
+        avatarUrl: avatarUrl,
         providerUserId,
       };
 

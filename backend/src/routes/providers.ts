@@ -1,7 +1,7 @@
 import { Context, Hono, Next } from "hono";
-import githubCallbackController from "../controller/providers/github/callback";
 import githubRedirectController from "../controller/providers/github/redirect";
-import { authenticateApplication } from "../middleware/authenticateApplication";
+import githubCallbackController from "../controller/providers/github/callback";
+import appleRedirectController from "../controller/providers/apple/redirect";
 import { generateUniqueIdWithPrefix } from "../utils/string";
 import { emailLoginController, loginSchema } from "../controller/email/login";
 import { zValidator } from "@hono/zod-validator";
@@ -21,6 +21,7 @@ import confirmEmailResetController, {
   confirmRestPasswordSchema,
 } from "../controller/accounts/password/reset/confirm";
 import { validateAccessToken } from "../middleware/validateAccessToken";
+import appleCallbackController from "../controller/providers/apple/callback";
 
 const providersRoutes = new Hono();
 
@@ -43,6 +44,9 @@ providersRoutes.use("*", async (c: Context, next: Next) => {
 providersRoutes.get("/github/redirect", githubRedirectController);
 
 providersRoutes.get("/github/callback", githubCallbackController);
+
+providersRoutes.get("/apple/redirect", appleRedirectController);
+providersRoutes.post("/apple/callback", appleCallbackController);
 
 email.post("/login", zValidator("json", loginSchema), emailLoginController);
 

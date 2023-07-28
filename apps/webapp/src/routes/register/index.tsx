@@ -35,11 +35,6 @@ export const useRegisterAction = routeAction$(
       });
     }
 
-    showNotification(
-      "User created successfully! Please log in to get started.",
-      "success"
-    );
-
     throw redirect(302, "/");
   },
   zod$({

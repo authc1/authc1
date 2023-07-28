@@ -46,3 +46,4 @@ lerna-debug.log*
 functions/**/*.js
 
 .env
+.env.*

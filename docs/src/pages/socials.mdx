@@ -1,0 +1,128 @@
+export const description =
+  'This documentation provides information about the API endpoints for the social login feature in the AuthC1 platform. These endpoints allow users to authenticate using third-party social media accounts.'
+
+# Social Login
+
+---
+
+## Redirect URL {{ tag: 'GET', label: '/{APPID}/{PROVIDER}/redirect' }}
+
+<Row>
+  <Col>
+    This API endpoint handles the redirect URL for social login authentication. It initiates the authentication process and redirects the user to the appropriate social media platform for login.
+
+    ### Query Parameters
+
+    <Properties>
+      <Property name="format" type="string">
+        (Optional) The response format. Accepted values: `json`, `redirect`. Default: `redirect`. If `json` is specified, a JSON response will be returned.
+      </Property>
+      <Property name="redirect_url" type="string">
+        (Optional) The allowed redirect URL to redirect the user after successful authentication. The URL must be added in the AuthC1 dashboard as an allowed redirect URL.
+      </Property>
+    </Properties>
+
+  </Col>
+  <Col sticky>
+    <CodeGroup title="Request" tag="GET" label="/{APPID}/{PROVIDER}/redirect">
+      ```bash {{ title: 'cURL' }}
+      curl https://api.authc1.com/{APPID}/{PROVIDER}/redirect?format=json&redirect_url=https://example.com/auth-callback
+      ```
+    </CodeGroup>
+
+    ```json {{ title: 'Response' }}
+    {
+      "url": "https://social-media-provider.com/auth?client_id={CLIENT_ID}&redirect_uri=https://api.authc1.com/{APPID}/{PROVIDER}/callback&scope=email+profile",
+    }
+    ```
+
+  </Col>
+</Row>
+
+---
+
+## Callback URL {{ tag: 'GET', label: '/{APPID}/{PROVIDER}/callback' }}
+
+<Row>
+  <Col>
+    This API endpoint handles the callback URL after the user has successfully authenticated with the social media platform. It retrieves the user's profile information and completes the authentication process.
+
+    ### Query Parameters
+
+    <Properties>
+      <Property name="access_token" type="string">
+        The access token generated for the authenticated user.
+      </Property>
+      <Property name="refresh_token" type="string">
+        The refresh token associated with the authenticated user's session.
+      </Property>
+      <Property name="session_id" type="string">
+        The session ID for the authenticated user.
+      </Property>
+      <Property name="local_id" type="string">
+        The local ID of the authenticated user.
+      </Property>
+      <Property name="email_verified" type="boolean">
+        Indicates whether the user's email has been verified (true/false).
+      </Property>
+      <Property name="expires_at" type="number">
+        The timestamp at which the authentication session expires.
+      </Property>
+      <Property name="expires_in" type="number">
+        The duration of the authentication session in seconds.
+      </Property>
+    </Properties>
+
+  </Col>
+  <Col sticky>
+    <CodeGroup title="Redirect URL">
+      ```plaintext
+      {callbackUrl}?access_token={accessToken}&refresh_token={refreshToken}&session_id={sessionId}&local_id=${user_id}&email_verified={boolean}&expires_at={timestamp}&expires_in={seconds}
+      ```
+    </CodeGroup>
+  </Col>
+</Row>
+
+---
+
+## Callback Error Handling
+
+If an error occurs during the social login process, the user will be redirected to the specified `redirect_url` (if provided) with an additional `error` query parameter. You can handle these errors on your redirect page.
+
+Example Redirect URL with Error:
+
+```
+https://example.com/auth-callback?error=invalid_request&error_description=Invalid+request+parameters.
+```
+
+The following error parameters can be returned:
+
+- `error`: The error code or error type.
+- `error_description`: A human-readable description of the error.
+
+Make sure to handle these errors gracefully and provide appropriate feedback to the user.
+
+---
+
+## Supported Providers
+
+The AuthC1 platform supports the following social media providers for social login:
+
+<Checkbox label="Amazon" defaultChecked={false} />
+<Checkbox label="Apple" defaultChecked={false} />
+<Checkbox label="Discord" defaultChecked={false} />
+<Checkbox label="Facebook" defaultChecked={false} />
+<Checkbox label="GitHub" defaultChecked={true} />
+<Checkbox label="GitLab" defaultChecked={false} />
+<Checkbox label="Google" defaultChecked={false} />
+<Checkbox label="Instagram" defaultChecked={false} />
+<Checkbox label="LinkedIn" defaultChecked={false} />
+<Checkbox label="Microsoft" defaultChecked={false} />
+<Checkbox label="Spotify" defaultChecked={false} />
+<Checkbox label="Twitter" defaultChecked={false} />
+
+Please note that the list of supported providers is continuously growing, and new providers may be added in the future.
+
+To enable GitHub as a social login provider in your application, please refer to the documentation for configuring GitHub integration in the AuthC1 dashboard.
+
+---
