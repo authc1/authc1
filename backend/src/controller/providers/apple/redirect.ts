@@ -17,14 +17,15 @@ const appleRedirectController = async (c: Context) => {
     const {
       apple_client_id: clientId,
       apple_redirect_uri: redirectTo,
-      apple_scope: scope = ["email", "name"],
+      apple_scope: scope,
     } = applicationInfo.providerSettings;
     const format = c.req.query("format") || "redirect";
     const options: BaseProvider.RedirectOptions = {
       options: {
         clientId,
         redirectTo,
-        scope,
+        scope: scope ? scope : ["email", "name"],
+        responseMode: 'form_post',
       },
     };
 
@@ -44,7 +45,6 @@ const appleRedirectController = async (c: Context) => {
 
     const url = await providerRedirect(c, apple, options);
 
-    console.log("url", url);
     if (format === "json") {
       return c.json({
         url: url,

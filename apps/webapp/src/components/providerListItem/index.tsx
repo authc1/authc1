@@ -37,7 +37,7 @@ export default component$(
                 </span>
               ) : (
                 <span class="bg-gray-300 text-gray-500 text-xs font-medium mr-2 px-2.5 py-0.5 rounded border border-gray-400">
-                  Disabled
+                  {inactive ? "Inactive" : "Disabled"}
                 </span>
               )}
               <svg
@@ -59,7 +59,11 @@ export default component$(
 
         <div
           aria-labelledby="accordion-collapse-heading-1"
-          class={`overflow-hidden ${state.checked ? 'transition-all ease-in duration-500 h-auto' : 'h-0 transition-all ease-out duration-500'}`}
+          class={`overflow-hidden ${
+            state.checked
+              ? "transition-all ease-in duration-500 h-auto"
+              : "h-0 transition-all ease-out duration-500"
+          }`}
         >
           <div
             class={`p-5 font-light border ${

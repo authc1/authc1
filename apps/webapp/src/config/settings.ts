@@ -235,7 +235,7 @@ export const providersSettings: ProvidersData = [
   {
     key: "apple",
     label: "Apple",
-    inactive: true,
+    inactive: false,
     canCopy: true,
     data: [
       {
