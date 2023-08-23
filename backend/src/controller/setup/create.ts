@@ -37,7 +37,6 @@ export const setupApplicationController = async (c: Context) => {
   const { name, email, password, settings } = body;
 
   const applicationId = generateUniqueIdWithAuthC1App(c);
-  console.log("callled---------------", applicationId);
   const key = `${applicationId}:email:${email}`;
   const userObjId = c.env.AuthC1User.idFromName(key);
   const userId = userObjId.toString();
@@ -57,8 +56,6 @@ export const setupApplicationController = async (c: Context) => {
     provider: "email",
     emailVerified: false,
   };
-
-  console.log("userData", userData);
 
   const appData = await applicationClient.create(
     {
@@ -80,12 +77,9 @@ export const setupApplicationController = async (c: Context) => {
     }
   );
 
-  console.log("appData", JSON.stringify(appData));
-
   const stub = c.env.AuthC1User.get(userObjId);
   const userClient = new UserClient(stub);
   await userClient.createUser(userData, appData);
-  console.log("added user");
   await userClient.setAccess(
     {
       id: applicationId,
@@ -96,8 +90,6 @@ export const setupApplicationController = async (c: Context) => {
     } as AccessedApp,
     appData
   );
-
-  console.log("user object access added");
 
   return c.json({
     applicationId,

@@ -22,9 +22,7 @@ async function verifyPassword(
   password: string,
   hashPassword: string
 ): Promise<boolean> {
-  console.log(password, hash);
   const isValid = await hash().check(password, hashPassword);
-  console.log(isValid);
   return isValid;
 }
 
@@ -35,7 +33,6 @@ async function addRefreshToken(
   applicationId: string,
   userId: string
 ) {
-  console.log("adding refreshToken", refreshToken, sessionId);
   const userObjId = c.env.AuthC1Token.idFromString(refreshToken);
   const stub = c.env.AuthC1Token.get(userObjId);
   const tokenClient = new TokenClient(stub);
@@ -49,17 +46,14 @@ async function addRefreshToken(
 
 export async function emailLoginController(c: Context) {
   const { email, password } = await c.req.json();
-  console.log("handleEmailLogin", email, password);
   const applicationInfo: ApplicationRequest = c.get("applicationInfo");
   const key = `${applicationInfo?.id}:email:${email}`;
-  console.log("key", key);
 
   const userObjId = c.env.AuthC1User.idFromName(key);
   const stub = c.env.AuthC1User.get(userObjId);
   const userClient = new UserClient(stub);
 
   const user = await userClient.getUser();
-  console.log("user---", user);
 
   if (!user?.id) {
     console.log("user not found, send error");

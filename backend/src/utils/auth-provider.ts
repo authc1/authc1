@@ -10,18 +10,117 @@ import {
 } from "./error-responses";
 import { generateUniqueIdWithPrefix } from "./string";
 import { createRefreshToken } from "./token";
-import type { BaseProvider } from "worker-auth-providers";
+import type { BaseProvider, SocialProvider } from "worker-auth-providers";
 
-export async function handleProviderCallback(
+interface ProviderOptions<T extends SocialProvider> {
+  providerConfig: {
+    clientId: string;
+    clientSecret: string;
+    providerId: number;
+  };
+  providerApi: T;
+  providerUserFields: {
+    providerUserId: string;
+    email: string;
+    name: string;
+    avatarUrl: string;
+  };
+}
+
+interface UserAuthenticationData {
+  user: UserData;
+  accessToken: string;
+  refreshToken?: string;
+  expiresAt: number;
+  expiresIn: number;
+}
+
+async function handleUserCreationOrUpdate(
   c: Context,
-  providerOptions: any
+  applicationInfo: ApplicationRequest,
+  providerId: number,
+  email: string,
+  name: string,
+  avatarUrl: string,
+  providerUserId: string,
+  sessionId: string
+): Promise<UserAuthenticationData> {
+  const applicationId = applicationInfo?.id as string;
+  const key = `${applicationId}:${providerId}:${email}`;
+  const userObjId = c.env.AuthC1User.idFromName(key);
+  const stub = c.env.AuthC1User.get(userObjId);
+  const userClient = new UserClient(stub);
+  const userData = await userClient.getUser();
+  const refreshToken = createRefreshToken(c);
+  const expiresIn = applicationInfo.settings.expires_in;
+  const expiresAt = Math.floor(Date.now() / 1000) + expiresIn;
+  if (userData?.id) {
+    const promises = await Promise.all([
+      userClient.createSession(applicationInfo, sessionId, refreshToken),
+      c.env.AUTHC1_ACTIVITY_QUEUE.send({
+        acitivity: "LoggedIn",
+        userId: userData?.id,
+        applicationId: applicationInfo?.id,
+        name: applicationInfo.name,
+        email,
+        created_at: new Date(),
+      }),
+    ]);
+
+    const [authDetails] = promises;
+    const { accessToken } = authDetails;
+
+    return {
+      user: userData,
+      accessToken,
+      refreshToken,
+      expiresAt,
+      expiresIn,
+    };
+  } else {
+    const userData = {
+      id: generateUniqueIdWithPrefix(),
+      applicationId,
+      name,
+      email,
+      provider: String(providerId),
+      emailVerified: true,
+      avatarUrl,
+      providerUserId,
+    };
+    const promises = await Promise.all([
+      userClient.createUser(userData, applicationInfo),
+      c.env.AUTHC1_ACTIVITY_QUEUE.send({
+        acitivity: "LoggedIn",
+        userId: userData?.id,
+        applicationId,
+        name: applicationInfo.name,
+        email,
+        created_at: new Date(),
+      }),
+    ]);
+
+    const [authDetails] = promises;
+    const { accessToken, refreshToken } = authDetails as AuthResponse;
+
+    return {
+      user: userData,
+      accessToken,
+      refreshToken,
+      expiresAt,
+      expiresIn,
+    };
+  }
+}
+
+export async function handleProviderCallback<T extends SocialProvider>(
+  c: Context,
+  providerOptions: ProviderOptions<T>
 ): Promise<Response> {
-  const { providerConfig, providerApi, providerUserFields, saveUserOptions } =
-    providerOptions;
+  const { providerConfig, providerApi, providerUserFields } = providerOptions;
   try {
     const applicationInfo = c.get("applicationInfo") as ApplicationRequest;
     const sessionId = c.get("sessionId") as string;
-    const applicationId = applicationInfo?.id as string;
     const { clientId, clientSecret, providerId } = providerConfig;
 
     const sessionData = await c.env.AUTHC1_USER_DETAILS.get(sessionId, {
@@ -44,70 +143,58 @@ export async function handleProviderCallback(
     const name = providerUser[providerUserFields.name];
     const avatarUrl = providerUser[providerUserFields.avatarUrl];
 
-    const key = `${applicationId}:${providerId}:${email}`;
-    const userObjId = c.env.AuthC1User.idFromName(key);
-    const stub = c.env.AuthC1User.get(userObjId);
-    const userClient = new UserClient(stub);
-    const userData = await userClient.getUser();
-    const refreshToken = createRefreshToken(c);
-
-    const expiresIn = applicationInfo.settings.expires_in;
-    const expiresAt = Math.floor(Date.now() / 1000) + applicationInfo.settings.expires_in
-
-    if (userData?.id) {
-      const promises = await Promise.all([
-        userClient.createSession(applicationInfo, sessionId, refreshToken),
-        c.env.AUTHC1_ACTIVITY_QUEUE.send({
-          acitivity: "LoggedIn",
-          userId: userData?.id,
-          applicationId: applicationInfo?.id,
-          name: applicationInfo.name,
-          email,
-          created_at: new Date(),
-        }),
-      ]);
-
-      const [authDetails] = promises;
-
-      const { accessToken } = authDetails;
-
-      return c.redirect(
-        `${redirectUrl}?access_token=${accessToken}&refresh_token=${refreshToken}&session_id=${sessionId}&local_id=${userData?.id}&email_verified=${userData?.emailVerified}&expires_at=${expiresAt}&expires_in=${expiresIn}`
-      );
-    } else {
-      const userData: UserData = {
-        id: generateUniqueIdWithPrefix(),
-        applicationId,
-        name,
+    const { accessToken, refreshToken, expiresAt, expiresIn, user } =
+      await handleUserCreationOrUpdate(
+        c,
+        applicationInfo,
+        providerId,
         email,
-        provider: providerId,
-        emailVerified: true,
-        avatarUrl: avatarUrl,
+        name,
+        avatarUrl,
         providerUserId,
-      };
-
-      console.log("userData", userData);
-      const promises = await Promise.all([
-        userClient.createUser(userData, applicationInfo),
-        c.env.AUTHC1_ACTIVITY_QUEUE.send({
-          acitivity: "LoggedIn",
-          userId: userData?.id,
-          applicationId,
-          name: applicationInfo.name,
-          email,
-          created_at: new Date(),
-        }),
-      ]);
-
-      const [authDetails] = promises;
-      const { accessToken, refreshToken } = authDetails as AuthResponse;
-
-      return c.redirect(
-        `${redirectUrl}?access_token=${accessToken}?refresh_token=${refreshToken}&session_id=${sessionId}&local_id=${userData?.id}&email_verified=${userData?.emailVerified}&expires_at=${expiresAt}&expires_in=${expiresIn}`
+        sessionId
       );
-    }
+    return c.redirect(
+      `${redirectUrl}?access_token=${accessToken}&refresh_token=${refreshToken}&session_id=${sessionId}&local_id=${user?.id}&email_verified=${user?.emailVerified}&expires_at=${expiresAt}&expires_in=${expiresIn}`
+    );
   } catch (e: any) {
     console.log("error", e);
+    return handleError(redirectFailedError, c, e);
+  }
+}
+export async function handleProviderToken<T extends SocialProvider>(
+  c: Context,
+  providerOptions: ProviderOptions<T>,
+  token: string
+): Promise<UserAuthenticationData | Response> {
+  const { providerConfig, providerApi, providerUserFields } = providerOptions;
+  try {
+    const applicationInfo = c.get("applicationInfo") as ApplicationRequest;
+    const sessionId = c.get("sessionId") as string;
+    const { providerId } = providerConfig;
+
+    const providerUser = await providerApi.getUser(token);
+    if (providerUser.error) {
+      return handleError(redirectFailedError, c);
+    }
+    const providerUserId = providerUser[providerUserFields.providerUserId];
+    const email = providerUser[providerUserFields.email];
+    const name = providerUser[providerUserFields.name];
+    const avatarUrl = providerUser[providerUserFields.avatarUrl];
+
+    const data = await handleUserCreationOrUpdate(
+      c,
+      applicationInfo,
+      providerId,
+      email,
+      name,
+      avatarUrl,
+      providerUserId,
+      sessionId
+    );
+    return data;
+  } catch (e: any) {
+    console.log(e);
     return handleError(redirectFailedError, c, e);
   }
 }

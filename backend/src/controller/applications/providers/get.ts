@@ -29,7 +29,6 @@ const getApplicationProvidersController = async (c: Context) => {
     const user = c.get("user");
     const applicationId = c.req.param("id");
     const applicationInfo = c.get("applicationInfo") as ApplicationRequest;
-    console.log("applicationInfo", applicationInfo);
     const key = `${applicationId}:email:${user.email}`;
     const hasAccess = checkAccess(c, key, applicationId);
     if (!hasAccess) {

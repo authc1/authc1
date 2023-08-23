@@ -125,6 +125,7 @@ export const signOut = async (
   baseUrl: string
 ) => {
   const client = createAuthc1Client(cookie, appId, baseUrl);
+  await cookie.delete(AUTHTOKEN_NAME);
   await client.logout();
   return null;
 };

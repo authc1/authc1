@@ -8,7 +8,7 @@
     "build": "turbo run build",
     "build:app": "turbo run build --filter=authc1-app",
     "deploy:app": "cd apps/webapp && npx wrangler pages publish dist --project-name authc1",
-    "deploy:docs": "cd docs && npx wrangler pages publish out --project-name authc1-docs",
+    "deploy:docs": "cd docs && npx wrangler pages deploy out --project-name authc1-docs",
     "deploy": "pnpm run build && pnpm run deploy:app && pnpm run deploy:docs",
     "test": "echo \"Error: no test specified\" && exit 1"
   },
@@ -21,8 +21,8 @@
   "author": "",
   "license": "ISC",
   "dependencies": {
-    "tsup": "^6.5.0",
-    "turbo": "^1.7.0",
-    "typescript": "^4.9.4"
+    "tsup": "^6.7.0",
+    "turbo": "^1.10.12",
+    "typescript": "^4.9.5"
   }
 }

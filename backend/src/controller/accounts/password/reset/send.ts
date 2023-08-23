@@ -49,7 +49,6 @@ const sendResetCodeController = async (c: Context) => {
     const { email } = await c.req.valid("json");
     const applicationInfo = c.get("applicationInfo") as ApplicationRequest;
 
-    console.log("applicationInfo", applicationInfo);
     const {
       email_verification_enabled: emailVerificationEnabled,
       email_verification_method: emailVerificationMethod,
@@ -64,7 +63,6 @@ const sendResetCodeController = async (c: Context) => {
     const emailVerificationCode = generateEmailVerificationCode();
 
     const key = `${applicationInfo?.id}:email:${email}`;
-    console.log("key", key, emailVerificationCode);
 
     const userObjId = c.env.AuthC1User.idFromName(key);
     const stub = c.env.AuthC1User.get(userObjId);

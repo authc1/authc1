@@ -45,7 +45,6 @@ export async function sendEmail(
       Source: sender,
     });
     await client.send(command);
-    console.log("Email sent!");
   } catch (err) {
     console.log("Error sending email", err);
     throw err;

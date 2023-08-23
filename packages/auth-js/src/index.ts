@@ -161,8 +161,6 @@ export class Authc1Client {
   ): Promise<Session> {
     const params = parseQueryParams(url);
 
-    console.log("params-------------------", params);
-
     if (params.error) {
       const error = params.error;
       const errorDescription = params.error_description || "Unknown error";

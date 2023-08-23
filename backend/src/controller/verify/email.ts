@@ -71,8 +71,6 @@ export const emailValidationController = async (c: Context) => {
     const stub = c.env.AuthC1User.get(userObjId);
     const userClient = new UserClient(stub);
 
-    console.log("emailVerificationCode", emailVerificationCode);
-
     await Promise.all([
       sendVerificationEmail(c, {
         email,

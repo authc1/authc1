@@ -36,7 +36,6 @@ export const updateApplicationController = async (c: Context) => {
     const body: Partial<ApplicationRequest> = await c.req.valid("json");
     const applicationId = c.req.param("id");
     const user = c.get("user");
-    console.log("updateApplicationProviderController", body);
     const key = `${applicationId}:email:${user.email}`;
     const hasAccess = checkAccess(c, key, applicationId);
 

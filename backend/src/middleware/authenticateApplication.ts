@@ -10,7 +10,6 @@ interface ApplicationInfo {
 export function authenticateApplication(id?: string): MiddlewareHandler {
   return async (c: Context, next: Next) => {
     const applicationId = c.req.param("appId") as string;
-    console.log("applicationId", applicationId);
     const id = c.env.AuthC1App.idFromString(applicationId);
     const applicationObj = c.env.AuthC1App.get(id);
     const applicationClient = new ApplicationClient(applicationObj);

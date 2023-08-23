@@ -92,14 +92,12 @@ export async function getUserFromToken(
   secret: string
 ): Promise<UserFromTokenResult> {
   const authorization = c.req.headers.get("Authorization");
-  console.log("authorization getUserFromToken", authorization);
   if (!authorization) {
     return setUnauthorizedResponse(c);
   }
 
   const token: string = authorization.replace(/Bearer\s+/i, "");
   const payload = await verify(c, token, secret as string);
-  console.log("payload", payload);
   if (payload instanceof Response) {
     return payload;
   }

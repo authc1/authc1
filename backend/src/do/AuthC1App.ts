@@ -67,7 +67,6 @@ export class AuthC1App implements DurableObject {
     this.env = env;
     this.appDetails = { ...appDetails };
     this.state.blockConcurrencyWhile(async () => {
-      console.log(this.appDetails);
       const result = await this.state.storage?.get(["owners", "appDetails"]);
       const owners = result?.get("owners") as Record<string, Owner>;
       const appDetails = result?.get("appDetails") as ApplicationRequest;
@@ -104,7 +103,6 @@ export class AuthC1App implements DurableObject {
       try {
         const appData: ApplicationRequest = await c.req.json();
         const { settings, providerSettings } = appData;
-        console.log("appData----------", appData);
         const details = {
           ...this.appDetails,
           ...appData,
@@ -136,7 +134,6 @@ export class AuthC1App implements DurableObject {
 
     this.app.patch("/owner", async (c: Context) => {
       const owner: Owner = await c.req.json();
-      console.log("owner----------", owner);
       this.owners[owner.id] = owner;
       await this.state.storage?.put("owners", this.owners);
       return c.json(owner);
@@ -166,7 +163,6 @@ export class ApplicationClient {
     owner: Owner
   ): Promise<ApplicationRequest> {
     try {
-      console.log("app, owner", app, owner);
       const res = await this.app.fetch("http://app/", {
         method: "POST",
         body: JSON.stringify({ app, owner }),

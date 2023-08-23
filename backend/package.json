@@ -4,7 +4,7 @@
   "scripts": {
     "start": "echo 'No build script for this package'",
     "build": "echo 'No build script for this package'",
-    "dev": "npx wrangler dev --local",
+    "dev": "npx wrangler dev",
     "deploy": "npx wrangler publish src/index.ts"
   },
   "dependencies": {
@@ -15,7 +15,7 @@
     "hono": "^3.1.7",
     "jose": "^4.14.4",
     "query-string": "^8.1.0",
-    "worker-auth-providers": "0.0.10-beta17",
+    "worker-auth-providers": "0.0.13-beta.4",
     "zod": "^3.21.4"
   },
   "devDependencies": {

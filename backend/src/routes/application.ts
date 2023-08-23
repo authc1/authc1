@@ -4,7 +4,6 @@ import {
   createApplicationController,
   schema as applicationSchema,
 } from "../controller/applications/create";
-import { applicationUpdateschema } from "../do/AuthC1App";
 import { getApplicationByIdController } from "../controller/applications/getById";
 import { validateAccessToken } from "../middleware/validateAccessToken";
 import { listApplicationController } from "../controller/applications/get";
@@ -23,7 +22,7 @@ applicationsRoutes.use("*", validateAccessToken());
 
 applicationsRoutes.post(
   "/",
-  zValidator("json", applicationUpdateschema),
+  zValidator("json", applicationSchema),
   createApplicationController
 );
 

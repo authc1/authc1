@@ -6,7 +6,6 @@ import { register } from "~/utils/auth";
 import type { ErrorResponse } from "~/utils/fetch";
 import { RegisterHero } from "~/components/icons/register-hero";
 import Button from "~/components/button";
-import { showNotification } from "~/utils/notification";
 
 export const useRegisterAction = routeAction$(
   async (data, { cookie, fail, redirect, env }) => {

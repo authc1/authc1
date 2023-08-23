@@ -15,10 +15,8 @@ export default component$(({ authState, applicationId, baseWssUrl }: Props) => {
   const store = useStore({
     activities: [] as any,
   });
-  console.log("baseWssUrl", baseWssUrl);
 
   useVisibleTask$(async () => {
-    console.log(`${baseWssUrl}/webhook/${id}/listen`);
     const ws = new WebSocket(`${baseWssUrl}/webhook/${id}/listen`);
     const payload = {
       type: "connection_init",

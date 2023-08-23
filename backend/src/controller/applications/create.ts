@@ -17,6 +17,10 @@ import {
 import { handleSuccess, SuccessResponse } from "../../utils/success-responses";
 import { getUserFromToken } from "../../utils/token";
 
+function getCurrentDateTime(): string {
+  return new Date().toISOString();
+}
+
 export const applicationSettingsSchema = z
   .object({
     expires_in: z.number().default(86400),
@@ -35,10 +39,10 @@ export const applicationSettingsSchema = z
 export const schema = z.object({
   id: z.string().optional(),
   name: z.string().optional(),
-  created_at: z.string().datetime(),
-  updated_at: z.string().datetime(),
+  created_at: z.string().datetime().default(getCurrentDateTime),
+  updated_at: z.string().datetime().default(getCurrentDateTime),
   settings: applicationSettingsSchema,
-  providerSettings: ProviderSettingsSchema,
+  providerSettings: ProviderSettingsSchema.default(defaultSettings),
 });
 
 export type ApplicationRequest = z.infer<typeof schema>;
@@ -63,16 +67,11 @@ export const createApplicationController = async (c: Context) => {
     }
 
     const key = `${applicationInfo?.id}:${payload.provider}:${payload?.email}`;
-
-    console.log("key", key);
-
     const userObjId = c.env.AuthC1User.idFromName(key);
     const stub = c.env.AuthC1User.get(userObjId);
 
     const userClient = new UserClient(stub);
     const user = await userClient.getUser();
-
-    console.log("creating application with", user);
 
     if (!user?.id) {
       return handleError(unauthorizedError, c);
@@ -92,7 +91,6 @@ export const createApplicationController = async (c: Context) => {
         invited: false,
       }
     );
-    console.log("application has been created with id", body);
 
     await userClient.setAccess(
       {

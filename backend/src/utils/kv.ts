@@ -32,7 +32,7 @@ export const defaultSettings: ProviderSettings = {
   apple_key_id: "",
   apple_client_id: "",
   apple_private_key: "",
-  apple_scope: "",
+  apple_scope: [],
   apple_redirect_uri: "",
 
   github_provider_enabled: false,
@@ -78,11 +78,7 @@ export const defaultSettings: ProviderSettings = {
   slack_scope: "",
 };
 
-export function storeProviderSettings(
-  c: Context,
-  id: string,
-  data: any = {}
-) {
+export function storeProviderSettings(c: Context, id: string, data: any = {}) {
   const settings = {
     ...defaultSettings,
     ...data,

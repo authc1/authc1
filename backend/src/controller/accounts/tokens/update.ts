@@ -28,14 +28,11 @@ export const updateAccessTokenByRefreshToken = async (c: Context) => {
     const { settings } = applicationInfo;
     const { refresh_token: refreshToken } = body;
 
-    console.log("refresh_token", refreshToken);
-
     const tokenObjId = c.env.AuthC1Token.idFromString(refreshToken);
     const stub = c.env.AuthC1Token.get(tokenObjId);
     const tokenClient = new TokenClient(stub);
     const tokenInfo = await tokenClient.getToken();
 
-    console.log("tokenInfotokenInfo", tokenInfo);
     if (!tokenInfo?.userId) {
       return handleError(refreshTokenNotValidError, c);
     }
@@ -49,8 +46,6 @@ export const updateAccessTokenByRefreshToken = async (c: Context) => {
       tokenInfo.sessionId,
       applicationInfo
     );
-
-    console.log("accessToken----------", accessToken);
 
     return c.json({
       access_token: accessToken,

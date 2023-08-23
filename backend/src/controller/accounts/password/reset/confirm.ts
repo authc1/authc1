@@ -35,7 +35,6 @@ const confirmEmailResetController = async (c: Context) => {
     }
 
     const key = `${applicationInfo?.id}:email:${email}`;
-    console.log("key", key);
 
     const userObjId = c.env.AuthC1User.idFromName(key);
     const stub = c.env.AuthC1User.get(userObjId);

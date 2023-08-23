@@ -36,7 +36,6 @@ export const useUpdateApplicationAction = routeAction$(
   async (data, { cookie, fail, redirect, params, env }) => {
     const baseUrl = env.get("VITE_API_URL") as string;
     const appId = env.get("VITE_APPLICTION_ID") as string;
-    console.log(data);
     const results = await updateApplicationById(
       data,
       params?.id,

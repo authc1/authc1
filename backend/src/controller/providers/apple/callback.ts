@@ -19,8 +19,6 @@ const appleCallbackController = async (c: Context) => {
     } = applicationInfo.providerSettings;
     const body: any = await c.req.parseBody();
     
-    console.log("body", JSON.stringify(body));
-    
     const clientSecret = await convertPrivateKeyToClientSecret({
       privateKey,
       keyIdentifier,

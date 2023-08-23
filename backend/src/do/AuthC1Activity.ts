@@ -52,7 +52,6 @@ export class AuthC1Activity {
 
     this.app.put("/webhook/push", async (c) => {
       const body: any = await c.req.json();
-      console.log("/webhook/push", body);
       const { clientId, ...data } = body;
       this.sendToClientId(JSON.stringify({ ...data }), clientId);
       return c.json({

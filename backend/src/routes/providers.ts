@@ -22,6 +22,8 @@ import confirmEmailResetController, {
 } from "../controller/accounts/password/reset/confirm";
 import { validateAccessToken } from "../middleware/validateAccessToken";
 import appleCallbackController from "../controller/providers/apple/callback";
+import githubLoginWithTokenController from "../controller/providers/github/login";
+import googleLoginWithTokenController from "../controller/providers/google/login";
 
 const providersRoutes = new Hono();
 
@@ -42,11 +44,13 @@ providersRoutes.use("*", async (c: Context, next: Next) => {
 });
 
 providersRoutes.get("/github/redirect", githubRedirectController);
-
 providersRoutes.get("/github/callback", githubCallbackController);
+providersRoutes.post("/github/login", githubLoginWithTokenController);
 
 providersRoutes.get("/apple/redirect", appleRedirectController);
 providersRoutes.post("/apple/callback", appleCallbackController);
+
+providersRoutes.post("/google/login", googleLoginWithTokenController);
 
 email.post("/login", zValidator("json", loginSchema), emailLoginController);
 

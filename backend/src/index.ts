@@ -2,12 +2,8 @@ import { Context, Hono, Next } from "hono";
 import { authenticateApplication } from "./middleware/authenticateApplication";
 import { accountsRoutes } from "./routes/accounts";
 import { applicationsRoutes } from "./routes/application";
-import { confirmRoutes } from "./routes/confirm";
-import { loginRoutes } from "./routes/login";
 import { providersRoutes } from "./routes/providers";
-import { registerRoutes } from "./routes/register";
 import { setupRoutes } from "./routes/setup";
-import { verifyRoutes } from "./routes/verify";
 import { webhookRoutes } from "./routes/webhook";
 export { AuthC1App } from "./do/AuthC1App";
 export { AuthC1User } from "./do/AuthC1User";
@@ -56,7 +52,6 @@ export default {
     return app.fetch(request, env, ctx);
   },
   async queue(batch: MessageBatch<any>, env: any) {
-    console.log("-------------------------------------------------------->");
     console.log(
       JSON.stringify({
         count: batch.messages.length,
@@ -66,7 +61,6 @@ export default {
 
     const promises = batch?.messages?.map((item) => {
       const { body } = item;
-      console.log("queue", body);
       const { applicationId, ...rest } = body;
       const id = env.AuthC1Activity.idFromName(applicationId);
       const obj = env.AuthC1Activity.get(id);
@@ -74,7 +68,6 @@ export default {
         clientId: applicationId,
         ...rest,
       };
-      console.log("json-----------", json);
       return obj.fetch(`http://activity/webhook/push`, {
         method: "PUT",
         body: JSON.stringify(json),

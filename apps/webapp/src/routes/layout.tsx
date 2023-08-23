@@ -23,11 +23,6 @@ export const userAuthStateLoader = routeLoader$(
     const appId = env.get("VITE_APPLICTION_ID") as string;
     const baseUrl = env.get("VITE_API_URL") as string;
     const token = query.get("access_token");
-    console.log("-------------------------->", token, url.toString());
-    if (token) {
-      await getRedirectResult(url.toString(), cookie, appId, baseUrl);
-      throw redirect(302, '/dashboard');
-    }
 
     const authState = getSession(cookie, appId, baseUrl);
 
@@ -42,9 +37,9 @@ export const userAuthStateLoader = routeLoader$(
         throw redirect(302, "/dashboard");
       }
 
-      /* if (pathname.includes("/login/") || pathname.includes("/register/")) {
+      if (pathname.includes("/login/") || pathname.includes("/register/")) {
         throw redirect(302, "/dashboard");
-      } */
+      }
 
       return {
         loggedIn: true,
@@ -52,6 +47,11 @@ export const userAuthStateLoader = routeLoader$(
         userName: decodedToken?.name,
         email: decodedToken?.email,
       };
+    }
+
+    if (token) {
+      await getRedirectResult(url.toString(), cookie, appId, baseUrl);
+      throw redirect(302, "/dashboard");
     }
 
     if (shouldRedirect(pathname, excludedPaths)) {
