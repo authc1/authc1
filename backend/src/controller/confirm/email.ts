@@ -46,7 +46,7 @@ export const confirmEmailControllerByCode = async (c: Context) => {
       ),
       c.env.AUTHC1_ACTIVITY_QUEUE.send({
         acitivity: "EmailConfirmedByCode",
-        id: user?.id,
+        id: user?.user_id,
         applicationId,
         created_at: Date.now(),
       }),
