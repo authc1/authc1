@@ -53,6 +53,7 @@ export type ApplicationSettingsSchema = z.infer<
 export const createApplicationController = async (c: Context) => {
   try {
     const applicationInfo: ApplicationRequest = c.get("applicationInfo");
+    const user = c.get("user");
     const body: ApplicationRequest = await c.req.valid("json");
     const { name } = body;
     const applicationId = generateUniqueIdWithAuthC1App(c);
@@ -66,16 +67,11 @@ export const createApplicationController = async (c: Context) => {
       return payload;
     }
 
-    const key = `${applicationInfo?.id}:${payload.provider}:${payload?.email}`;
-    const userObjId = c.env.AuthC1User.idFromName(key);
+    const userObjId = c.env.AuthC1User.idFromString(user?.user_id);
     const stub = c.env.AuthC1User.get(userObjId);
 
     const userClient = new UserClient(stub);
-    const user = await userClient.getUser();
 
-    if (!user?.id) {
-      return handleError(unauthorizedError, c);
-    }
     await appClient.create(
       {
         id: applicationId,

@@ -8,7 +8,6 @@ import {
   redirectFailedError,
   redirectUrlNotProvidedError,
 } from "./error-responses";
-import { generateUniqueIdWithPrefix } from "./string";
 import { createRefreshToken } from "./token";
 import type { BaseProvider, SocialProvider } from "worker-auth-providers";
 
@@ -79,7 +78,7 @@ async function handleUserCreationOrUpdate(
     };
   } else {
     const userData = {
-      id: generateUniqueIdWithPrefix(),
+      id: userObjId.toString(),
       applicationId,
       name,
       email,
