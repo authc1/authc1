@@ -15,10 +15,10 @@ const appleCallbackController = async (c: Context) => {
       apple_client_id: clientId,
       apple_private_key: privateKey,
       apple_team_id: teamId,
-      apple_key_id: keyIdentifier
+      apple_key_id: keyIdentifier,
     } = applicationInfo.providerSettings;
     const body: any = await c.req.parseBody();
-    
+
     const clientSecret = await convertPrivateKeyToClientSecret({
       privateKey,
       keyIdentifier,
@@ -26,8 +26,8 @@ const appleCallbackController = async (c: Context) => {
       clientId,
       expAfter: 3600,
     });
-    
-    const providerConfig = { clientSecret, clientId, providerId: 2 };
+
+    const providerConfig = { clientSecret, clientId, providerId: "apple" };
     const response = await handleProviderCallback(c, {
       providerConfig,
       providerApi: apple,

@@ -24,6 +24,8 @@ import { validateAccessToken } from "../middleware/validateAccessToken";
 import appleCallbackController from "../controller/providers/apple/callback";
 import githubLoginWithTokenController from "../controller/providers/github/login";
 import googleLoginWithTokenController from "../controller/providers/google/login";
+import appleLoginWithTokenController from "../controller/providers/apple/login";
+import googleRedirectController from "../controller/providers/google/redirect";
 
 const providersRoutes = new Hono();
 
@@ -49,7 +51,10 @@ providersRoutes.post("/github/login", githubLoginWithTokenController);
 
 providersRoutes.get("/apple/redirect", appleRedirectController);
 providersRoutes.post("/apple/callback", appleCallbackController);
+providersRoutes.post("/apple/login", appleLoginWithTokenController);
 
+providersRoutes.get("/google/redirect", googleRedirectController);
+providersRoutes.post("/google/callback", appleCallbackController);
 providersRoutes.post("/google/login", googleLoginWithTokenController);
 
 email.post("/login", zValidator("json", loginSchema), emailLoginController);

@@ -1,4 +1,4 @@
-import { github } from "worker-auth-providers";
+import { google } from "worker-auth-providers";
 import { Context } from "hono";
 import {
   handleError,
@@ -7,21 +7,21 @@ import {
 import { handleProviderCallback } from "../../../utils/auth-provider";
 import { ApplicationRequest } from "../../applications/create";
 
-const githubCallbackController = async (c: Context) => {
+const googleCallbackController = async (c: Context) => {
   try {
     const applicationInfo = c.get("applicationInfo") as ApplicationRequest;
-    const { github_client_id: clientId, github_client_secret: clientSecret } =
+    const { google_client_id: clientId, google_client_secret: clientSecret } =
       applicationInfo.providerSettings;
-    const providerConfig = { clientSecret, clientId, providerId: "github" };
+    const providerConfig = { clientSecret, clientId, providerId: "google" };
 
     const response = await handleProviderCallback(c, {
       providerConfig,
-      providerApi: github,
+      providerApi: google,
       providerUserFields: {
         providerUserId: "id",
         email: "email",
         name: "name",
-        avatarUrl: "avatar_url",
+        avatarUrl: "picture",
       },
     });
 
@@ -32,4 +32,4 @@ const githubCallbackController = async (c: Context) => {
   }
 };
 
-export default githubCallbackController;
+export default googleCallbackController;

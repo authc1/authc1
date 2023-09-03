@@ -10,7 +10,7 @@ const googleLoginWithTokenController = async (c: Context) => {
     const { token } = await c.req.json();
     const { google_client_id: clientId, google_client_secret: clientSecret } =
       applicationInfo.providerSettings;
-    const providerConfig = { clientSecret, clientId, providerId: 3 };
+    const providerConfig = { clientSecret, clientId, providerId: "google" };
     const user = await handleProviderToken(
       c,
       {
@@ -19,8 +19,8 @@ const googleLoginWithTokenController = async (c: Context) => {
         providerUserFields: {
           providerUserId: "id",
           email: "email",
-          name: "given_name",
-          avatarUrl: "avatar_url",
+          name: "name",
+          avatarUrl: "picture",
         },
       },
       token

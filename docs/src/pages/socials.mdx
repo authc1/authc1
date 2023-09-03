@@ -84,6 +84,44 @@ export const description =
 </Row>
 
 ---
+## Sign In with Provider Token {{ tag: 'POST', label: '/{APPID}/{PROVIDER}/login' }}
+
+<Row>
+  <Col>
+    This API endpoint allows applications to authenticate users using a provider-specific access token. To use this method, send a POST request to `/{APPID}/{PROVIDER}/login` with the following request body:
+
+    ```json
+    {
+      "token": "TOKEN_DATA"
+    }
+    ```
+
+    ### Response
+    Upon successful authentication, this endpoint will return the user's profile information and complete the authentication process.
+
+    ```json {{ title: 'Response' }}
+    {
+      "access_token": "ACCESS_TOKEN",
+      "refresh_token": "REFRESH_TOKEN",
+      "session_id": "SESSION_ID",
+      "local_id": "LOCAL_ID",
+      "email_verified": true,
+      "expires_at": 1679817600,
+      "expires_in": 3600
+    }
+    ```
+
+  </Col>
+  <Col sticky>
+    <CodeGroup title="Request" tag="POST" label="/{APPID}/{PROVIDER}/login">
+      ```bash {{ title: 'cURL' }}
+      curl -X POST https://api.authc1.com/{APPID}/{PROVIDER}/login -H "Content-Type: application/json" -d '{"token": "TOKEN_DATA"}'
+      ```
+    </CodeGroup>
+  </Col>
+</Row>
+
+---
 
 ## Callback Error Handling
 
@@ -109,12 +147,12 @@ Make sure to handle these errors gracefully and provide appropriate feedback to 
 The AuthC1 platform supports the following social media providers for social login:
 
 <Checkbox label="Amazon" defaultChecked={false} />
-<Checkbox label="Apple" defaultChecked={false} />
+<Checkbox label="Apple" defaultChecked={true} />
 <Checkbox label="Discord" defaultChecked={false} />
 <Checkbox label="Facebook" defaultChecked={false} />
 <Checkbox label="GitHub" defaultChecked={true} />
 <Checkbox label="GitLab" defaultChecked={false} />
-<Checkbox label="Google" defaultChecked={false} />
+<Checkbox label="Google" defaultChecked={true} />
 <Checkbox label="Instagram" defaultChecked={false} />
 <Checkbox label="LinkedIn" defaultChecked={false} />
 <Checkbox label="Microsoft" defaultChecked={false} />

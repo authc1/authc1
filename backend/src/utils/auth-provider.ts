@@ -6,6 +6,7 @@ import {
   clientIdNotProvidedError,
   handleError,
   redirectFailedError,
+  unauthorizedError,
   redirectUrlNotProvidedError,
 } from "./error-responses";
 import { createRefreshToken } from "./token";
@@ -15,7 +16,7 @@ interface ProviderOptions<T extends SocialProvider> {
   providerConfig: {
     clientId: string;
     clientSecret: string;
-    providerId: number;
+    providerId: string;
   };
   providerApi: T;
   providerUserFields: {
@@ -34,10 +35,20 @@ interface UserAuthenticationData {
   expiresIn: number;
 }
 
+interface UserAuthenticationResponse {
+  access_token: string;
+  refresh_token: string;
+  session_id: string;
+  local_id: string;
+  email_verified: boolean;
+  expires_at: number;
+  expires_in: number;
+}
+
 async function handleUserCreationOrUpdate(
   c: Context,
   applicationInfo: ApplicationRequest,
-  providerId: number,
+  providerId: string,
   email: string,
   name: string,
   avatarUrl: string,
@@ -53,7 +64,8 @@ async function handleUserCreationOrUpdate(
   const refreshToken = createRefreshToken(c);
   const expiresIn = applicationInfo.settings.expires_in;
   const expiresAt = Math.floor(Date.now() / 1000) + expiresIn;
-  if (userData?.id) {
+  // TODO: @subh to remove hardcoded id length change
+  if (userData?.id && userData.id.length === 64) {
     const promises = await Promise.all([
       userClient.createSession(applicationInfo, sessionId, refreshToken),
       c.env.AUTHC1_ACTIVITY_QUEUE.send({
@@ -82,7 +94,7 @@ async function handleUserCreationOrUpdate(
       applicationId,
       name,
       email,
-      provider: String(providerId),
+      provider: providerId,
       emailVerified: true,
       avatarUrl,
       providerUserId,
@@ -165,7 +177,7 @@ export async function handleProviderToken<T extends SocialProvider>(
   c: Context,
   providerOptions: ProviderOptions<T>,
   token: string
-): Promise<UserAuthenticationData | Response> {
+): Promise<UserAuthenticationResponse | Response> {
   const { providerConfig, providerApi, providerUserFields } = providerOptions;
   try {
     const applicationInfo = c.get("applicationInfo") as ApplicationRequest;
@@ -174,7 +186,7 @@ export async function handleProviderToken<T extends SocialProvider>(
 
     const providerUser = await providerApi.getUser(token);
     if (providerUser.error) {
-      return handleError(redirectFailedError, c);
+      return handleError(unauthorizedError, c, providerUser.error);
     }
     const providerUserId = providerUser[providerUserFields.providerUserId];
     const email = providerUser[providerUserFields.email];
@@ -191,7 +203,15 @@ export async function handleProviderToken<T extends SocialProvider>(
       providerUserId,
       sessionId
     );
-    return data;
+    return {
+      access_token: data.accessToken,
+      refresh_token: data.refreshToken as string,
+      session_id: sessionId,
+      local_id: data.user.id,
+      email_verified: data.user.emailVerified,
+      expires_in: data.expiresIn,
+      expires_at: data.expiresAt,
+    };
   } catch (e: any) {
     console.log(e);
     return handleError(redirectFailedError, c, e);

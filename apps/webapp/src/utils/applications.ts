@@ -132,6 +132,5 @@ export const getAllApplicationsProvidersById = async (
     baseUrl,
     cookie
   );
-  console.log("getAllApplicationsProvidersById", data);
   return data;
 };
