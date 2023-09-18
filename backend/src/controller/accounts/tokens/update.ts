@@ -28,6 +28,8 @@ export const updateAccessTokenByRefreshToken = async (c: Context) => {
     const { settings } = applicationInfo;
     const { refresh_token: refreshToken } = body;
 
+    console.log(refreshToken);
+
     const tokenObjId = c.env.AuthC1Token.idFromString(refreshToken);
     const stub = c.env.AuthC1Token.get(tokenObjId);
     const tokenClient = new TokenClient(stub);

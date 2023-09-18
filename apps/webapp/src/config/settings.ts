@@ -13,10 +13,26 @@ export interface FormItem {
 export const settingsFields: FormItem[] = [
   {
     key: "application_id",
-    name: 'application_id',
+    name: "application_id",
     label: "Application ID (X-Authc1-Id)",
     inputType: "input",
     editable: false,
+  },
+  {
+    key: "is_dev_mode",
+    label: "Still on development mode?",
+    inputType: "radio",
+    editable: true,
+    options: [
+      { label: "True", value: true },
+      { label: "False", value: false },
+    ],
+  },
+  {
+    key: "dev_mode_code",
+    label: "Verification / OTP code can be used for testing",
+    inputType: "input",
+    editable: true,
   },
   {
     key: "settings.redirect_uri[]",
@@ -209,7 +225,7 @@ export const providersSettings: ProvidersData = [
   {
     key: "phone",
     label: "Phone",
-    inactive: true,
+    inactive: false,
     canCopy: false,
     data: [
       {

@@ -1,6 +1,6 @@
 import { Context } from "hono";
 import { UserClient } from "../../do/AuthC1User";
-import { handleSESError, sendEmail } from "../../utils/email";
+import { handleSESErrors, sendEmail } from "../../utils/email";
 import {
   emailVerificationDisabled,
   handleError,
@@ -99,6 +99,6 @@ export const emailValidationController = async (c: Context) => {
     });
   } catch (err) {
     console.log(err);
-    return handleSESError(c, err);
+    return handleSESErrors(c, err);
   }
 };

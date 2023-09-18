@@ -9,6 +9,7 @@
   },
   "dependencies": {
     "@aws-sdk/client-ses": "^3.321.1",
+    "@aws-sdk/client-sns": "^3.405.0",
     "@hono/zod-validator": "^0.1.2",
     "@tsndr/cloudflare-worker-jwt": "^2.2.1",
     "bcryptjs": "^2.4.3",

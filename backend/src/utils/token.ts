@@ -3,19 +3,20 @@ import { Context } from "hono";
 import { setUnauthorizedResponse, verify } from "../middleware/jwt";
 import { generateRandomID } from "./string";
 
-interface Payload {
+type Payload = {
   userId: string;
   expiresIn: number;
   applicationName: string;
-  email: string;
   emailVerified: boolean;
   applicationId: string;
   secret: string;
   algorithm: string;
   sessionId: string;
-  provider?: string;
+  provider: string;
   name?: string;
-}
+  email?: string;
+  phone?: string;
+};
 
 interface AuthToken {
   accessToken: string;
@@ -42,6 +43,7 @@ export async function createAccessToken(payload: Payload): Promise<string> {
     applicationName,
     applicationId,
     email,
+    phone,
     expiresIn,
     emailVerified,
     secret,
@@ -62,9 +64,10 @@ export async function createAccessToken(payload: Payload): Promise<string> {
       iat: Math.floor(Date.now() / 1000),
       email,
       email_verified: emailVerified,
+      phone,
       provider: provider,
       session_id: sessionId,
-      name
+      name,
     },
     secret,
     algorithm

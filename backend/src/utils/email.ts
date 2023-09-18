@@ -51,7 +51,7 @@ export async function sendEmail(
   }
 }
 
-export function handleSESError(c: Context, err: any) {
+export function handleSESErrors(c: Context, err: any) {
   switch (err.code) {
     case "MessageRejected":
       return handleError(messageRejectedError, c, err);

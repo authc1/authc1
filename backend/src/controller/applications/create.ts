@@ -8,7 +8,7 @@ import {
   handleError,
   unauthorizedError,
 } from "../../utils/error-responses";
-import { defaultSettings } from "../../utils/kv";
+import { defaultSettings, devModeCode } from "../../utils/kv";
 import {
   generateRandomID,
   generateUniqueIdWithAuthC1App,
@@ -33,6 +33,8 @@ export const applicationSettingsSchema = z
     account_deletion_enabled: z.boolean().default(false),
     failed_login_attempts: z.number().default(5),
     allow_registration: z.boolean().optional(),
+    is_dev_mode: z.boolean().default(true),
+    dev_mode_code: z.string().default(devModeCode),
   })
   .default({});
 

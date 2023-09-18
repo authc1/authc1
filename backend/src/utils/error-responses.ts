@@ -127,6 +127,22 @@ export const emailVerificationError: ErrorResponse = {
   status: 500,
 };
 
+export const failedToSendVerificationCode: ErrorResponse = {
+  error: {
+    code: "FAILED_TO_SEND_VERIFICATION_CODE",
+    message: "Failed to send verification code.",
+  },
+  status: 500,
+};
+
+export const phoneVerificationDisabled: ErrorResponse = {
+  error: {
+    code: "PHONE_VERIFICATION_DISABLED",
+    message: "Phone verification is not enabled for this application.",
+  },
+  status: 400,
+};
+
 export const emailVerificationDisabled: ErrorResponse = {
   error: {
     code: "EMAIL_VERIFICATION_DISABLED",

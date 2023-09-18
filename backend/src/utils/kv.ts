@@ -1,6 +1,8 @@
 import { Context } from "hono";
 import { ProviderSettings } from "../models/provider";
 
+export const devModeCode = "333333";
+
 export const defaultSettings: ProviderSettings = {
   email_provider_enabled: true,
   sender_email: "system@authc1.com",

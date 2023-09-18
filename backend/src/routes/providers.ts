@@ -26,12 +26,19 @@ import githubLoginWithTokenController from "../controller/providers/github/login
 import googleLoginWithTokenController from "../controller/providers/google/login";
 import appleLoginWithTokenController from "../controller/providers/apple/login";
 import googleRedirectController from "../controller/providers/google/redirect";
+import {
+  phoneVerifyController,
+  phoneVerifySchema,
+} from "../controller/verify/phone";
+import { phoneConfirmController, phoneConfirmSchema } from "../controller/confirm/phone";
 
 const providersRoutes = new Hono();
 
 const email = new Hono();
 email.use("/verify", validateAccessToken());
 email.use("/confirm", validateAccessToken());
+
+const phone = new Hono();
 
 export const sessionCookieName = "AuthC1_Session_Id";
 
@@ -85,6 +92,18 @@ email.post(
   confirmEmailResetController
 );
 
+phone.post(
+  "/verify",
+  zValidator("json", phoneVerifySchema),
+  phoneVerifyController
+);
+phone.post(
+  "/confirm",
+  zValidator("json", phoneConfirmSchema),
+  phoneConfirmController
+);
+
 providersRoutes.route("/email", email);
+providersRoutes.route("/phone", phone);
 
 export { providersRoutes };

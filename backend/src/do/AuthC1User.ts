@@ -10,23 +10,27 @@ import {
 import { generateUniqueIdWithPrefix } from "../utils/string";
 import { createAccessToken, createRefreshToken } from "../utils/token";
 import { TokenClient } from "./AuthC1Token";
-
-export const schema = z.object({
-  id: z.string(),
-  applicationId: z.string(),
-  name: z.string(),
-  email: z.string().email(),
-  password: z.string().optional(),
-  provider: z.string(),
-  emailVerified: z.boolean().default(false),
-  avatarUrl: z.string().optional(),
-  providerUserId: z.string().optional(),
-  emailVerifyCode: z.string().optional(),
-  phoneVerifyCode: z.string().optional(),
-  expirationTimestamp: z.number().optional(),
-  created_at: z.string().datetime().optional(),
-  updated_at: z.string().datetime().optional(),
-});
+export const schema = z
+  .object({
+    id: z.string(),
+    applicationId: z.string(),
+    name: z.string().optional(),
+    email: z.string().email().optional(),
+    phone: z.string().optional(),
+    password: z.string().optional(),
+    provider: z.string(),
+    emailVerified: z.boolean().default(false),
+    avatarUrl: z.string().optional(),
+    providerUserId: z.string().optional(),
+    emailVerifyCode: z.string().optional(),
+    phoneVerifyCode: z.string().optional(),
+    expirationTimestamp: z.number().optional(),
+    created_at: z.string().datetime().optional(),
+    updated_at: z.string().datetime().optional(),
+  })
+  .refine((data) => data.email || data.phone, {
+    message: "Either email or phone must be provided",
+  });
 
 export const accessedAppSchema = z.object({
   id: z.string(),
@@ -51,7 +55,7 @@ export type AccessedApp = z.infer<typeof accessedAppSchema>;
 export type AuthResponse = {
   accessToken: string;
   refreshToken?: string;
-  user?: UserData
+  user?: UserData;
 };
 
 export class AuthC1User implements DurableObject {
@@ -102,9 +106,6 @@ export class AuthC1User implements DurableObject {
         user: UserData;
       } = await c.req.json();
       const { app, user } = data;
-      /* const appId = c.env.AuthC1App.idFromName(app.id);
-      const applicationObj = c.env.AuthC1App.get(appId);
-      const appClient = new ApplicationClient(applicationObj, c); */
       const refreshToken = createRefreshToken(c);
       const sessionId = generateUniqueIdWithPrefix();
       const accessToken = await createAccessToken({
@@ -117,7 +118,8 @@ export class AuthC1User implements DurableObject {
         secret: app.settings.secret,
         algorithm: app.settings.algorithm,
         sessionId,
-        name: this.userData?.name,
+        name: user?.name || this.userData?.name,
+        provider: this.userData?.provider,
       });
       this.sessions = {
         ...this.sessions,
@@ -138,7 +140,7 @@ export class AuthC1User implements DurableObject {
           userData: this.userData,
           sessions: this.sessions,
         }),
-        this.addRefreshToken(c, sessionId, refreshToken, app.id as string),
+        this.addRefreshToken(c, refreshToken, sessionId, app.id as string),
       ]);
       return c.json({
         access_token: accessToken,
@@ -209,6 +211,7 @@ export class AuthC1User implements DurableObject {
         algorithm: appSettings.settings.algorithm,
         sessionId,
         name: this.userData.name,
+        provider: this.userData?.provider,
       });
       const sessionData = {
         sessionId,
@@ -273,10 +276,65 @@ export class AuthC1User implements DurableObject {
       });
     });
 
+    this.app.patch("/verifyPhone", async (c: Context) => {
+      const { phoneVerifyCode, appSettings } = await c.req.json();
+      if (
+        typeof this.userData.expirationTimestamp === "undefined" ||
+        (this.userData.expirationTimestamp as number) < Date.now() / 1000 ||
+        (this.userData.phoneVerifyCode as string) !== phoneVerifyCode.toString()
+      ) {
+        return handleError(expiredOrInvalidCode, c);
+      }
+
+      const sessionId = generateUniqueIdWithPrefix();
+      const refreshToken = createRefreshToken(c);
+      const accessToken = await createAccessToken({
+        userId: this.userData.id,
+        expiresIn: appSettings.settings.expires_in,
+        applicationName: appSettings.name as string,
+        phone: this.userData.phone,
+        emailVerified: false,
+        applicationId: appSettings.id as string,
+        secret: appSettings.settings.secret,
+        algorithm: appSettings.settings.algorithm,
+        sessionId,
+        name: this.userData.name,
+        provider: this.userData?.provider,
+      });
+      const newSession = {
+        sessionId,
+        accessToken,
+        refreshToken,
+        created_at: new Date().toISOString(),
+      };
+      this.sessions = {
+        [sessionId]: newSession,
+      };
+      this.userData.expirationTimestamp = undefined;
+      console.log(refreshToken, appSettings);
+      await Promise.all([
+        await this.state.storage?.put({
+          userData: this.userData,
+          sessions: this.sessions,
+        }),
+        this.addRefreshToken(
+          c,
+          refreshToken,
+          sessionId,
+          appSettings.id as string
+        ),
+      ]);
+
+      return c.json({
+        ...newSession,
+      });
+    });
+
     this.app.patch("/verify", async (c: Context) => {
       const { emailVerifyCode, appSettings } = await c.req.json();
 
       if (
+        typeof this.userData.expirationTimestamp === "undefined" ||
         (this.userData.expirationTimestamp as number) < Date.now() / 1000 ||
         (this.userData.emailVerifyCode as string) !== emailVerifyCode.toString()
       ) {
@@ -297,6 +355,7 @@ export class AuthC1User implements DurableObject {
         algorithm: appSettings.settings.algorithm,
         sessionId,
         name: this.userData.name,
+        provider: this.userData?.provider,
       });
       const newSession = {
         sessionId,
@@ -307,7 +366,7 @@ export class AuthC1User implements DurableObject {
       this.sessions = {
         [sessionId]: newSession,
       };
-
+      this.userData.expirationTimestamp = undefined;
       await this.state.storage?.put({
         userData: this.userData,
         sessions: this.sessions,
@@ -341,6 +400,7 @@ export class AuthC1User implements DurableObject {
         algorithm: appSettings.settings.algorithm,
         sessionId,
         name: this.userData.name,
+        provider: this.userData?.provider,
       });
       const newSession = {
         sessionId,
@@ -382,6 +442,7 @@ export class AuthC1User implements DurableObject {
         algorithm,
         sessionId,
         name: userName,
+        provider: this.userData?.provider,
       });
 
       this.sessions = {
@@ -405,7 +466,7 @@ export class AuthC1User implements DurableObject {
 
       return c.json({
         accessToken,
-        user: this.userData
+        user: this.userData,
       });
     });
   }
@@ -416,7 +477,7 @@ export class AuthC1User implements DurableObject {
     sessionId: string,
     applicationId: string
   ) {
-    const userObjId = c.env.AuthC1Token.idFromName(refreshToken);
+    const userObjId = c.env.AuthC1Token.idFromString(refreshToken);
     const stub = c.env.AuthC1Token.get(userObjId);
     const tokenClient = new TokenClient(stub);
     return tokenClient.createToken(
@@ -539,6 +600,25 @@ export class UserClient {
       method: "PATCH",
       body: JSON.stringify({
         emailVerifyCode: code,
+        appSettings,
+      }),
+    });
+    if (!res.ok) {
+      const errorData: ErrorResponse = await res.json();
+      throw new Error(errorData.error.code);
+    }
+    const data: SessionData = await res.json();
+    return data;
+  }
+
+  async verifyPhoneCodeAndUpdate(
+    code: string,
+    appSettings: ApplicationRequest
+  ) {
+    const res = await this.user.fetch("http://user/verifyPhone", {
+      method: "PATCH",
+      body: JSON.stringify({
+        phoneVerifyCode: code,
         appSettings,
       }),
     });

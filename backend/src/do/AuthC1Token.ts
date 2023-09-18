@@ -60,6 +60,7 @@ export class AuthC1Token implements DurableObject {
 
     this.app.get("/", async (c: Context) => {
       const tokens = await this.state.storage?.get<AuthDetials>("tokens");
+      console.log("tokens-------------------", tokens);
       return c.json(tokens);
     });
   }
