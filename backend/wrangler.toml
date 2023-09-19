@@ -29,9 +29,6 @@ max_batch_timeout = 5
 [vars]
 VERIFY_EMAIL_ENDPOINT = "https://authc1.com"
 API_VERSION = "v1"
-ACCESS_KEY_ID = "AKIAQKUVSWMDJUON36FH"
-SECRET_ACCESS_KEY = "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"
-
 
 [[migrations]]
 tag = "v1"

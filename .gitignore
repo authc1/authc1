@@ -47,3 +47,4 @@ functions/**/*.js
 
 .env
 .env.*
+**/.dev.vars
