@@ -87,8 +87,7 @@ export const updateApplicationProviderController = async (c: Context) => {
     const body: Partial<ProviderSettings> = await c.req.valid("json");
     const applicationId = c.req.param("id");
     const user = c.get("user");
-    const key = `${applicationId}:email:${user.email}`;
-    const hasAccess = checkAccess(c, key, applicationId);
+    const hasAccess = await checkAccess(c, user.user_id, applicationId);
 
     if (!hasAccess) {
       return handleError(unauthorizedDataRequestError, c);

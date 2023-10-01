@@ -5,9 +5,13 @@ import {
   phoneVerificationDisabled,
   handleError,
 } from "../../utils/error-responses";
-import { generatPhoneVerificationCode } from "../../utils/string";
+import {
+  generatPhoneVerificationCode,
+  generateUniqueIdWithPrefix,
+} from "../../utils/string";
 import { ApplicationRequest } from "../applications/create";
 import { handleSNSErrors, sendPhoneOTP } from "../../utils/phone";
+import { EventsConfig } from "../../enums/events";
 
 export const phoneVerifySchema = z.object({
   phone: z.string(),
@@ -17,13 +21,13 @@ export const phoneVerifyController = async (c: Context) => {
   try {
     const applicationInfo: ApplicationRequest = c.get("applicationInfo");
     const applicationId = applicationInfo.id as string;
-    console.log("applicationId------------", applicationId);
     const {
       phone_provider_enabled: phoneVerificationEnabled,
       text_template_body: textTemplateBody,
-      is_dev_mode: isDevMode,
-      dev_mode_code: devModeCode,
     } = applicationInfo.providerSettings;
+
+    const { is_dev_mode: isDevMode, dev_mode_code: devModeCode } =
+      applicationInfo.settings;
 
     if (!phoneVerificationEnabled) {
       return handleError(phoneVerificationDisabled, c);
@@ -36,7 +40,6 @@ export const phoneVerifyController = async (c: Context) => {
     const stub = c.env.AuthC1User.get(userObjId);
     const userClient = new UserClient(stub);
     const user = await userClient.getUser();
-    console.log("user", user);
     if (!user?.id) {
       const userData: UserData = {
         id: userObjId.toString(),
@@ -44,24 +47,38 @@ export const phoneVerifyController = async (c: Context) => {
         provider: "phone",
         emailVerified: false,
         phone,
+        phoneVerified: false,
       };
-      console.log("userData", userData);
-      await userClient.createUser(userData, applicationInfo);
+      console.log("JSON----------------", JSON.stringify(userData));
+      await Promise.all([
+        userClient.createUser(userData, applicationInfo),
+        c.env.AUTHC1_ACTIVITY_QUEUE.send({
+          acitivity: EventsConfig.UserRegistered,
+          userId: userData?.id,
+          applicationId,
+          name: applicationInfo.name,
+          phone,
+          created_at: new Date(),
+          provider: "phone",
+        }),
+      ]);
     }
 
-    const phoneVerificationCode = !isDevMode ? generatPhoneVerificationCode() : devModeCode;
+    const phoneVerificationCode = !isDevMode
+      ? generatPhoneVerificationCode()
+      : devModeCode;
     const text = textTemplateBody.replace("{{code}}", phoneVerificationCode);
-    console.log(text);
+    const sessionId = generateUniqueIdWithPrefix();
     await Promise.all([
       !isDevMode ? sendPhoneOTP(c, phone, text) : null,
-      userClient.updateUser({
+      userClient.updateUser(applicationInfo, sessionId, {
         phoneVerifyCode: phoneVerificationCode,
         expirationTimestamp: Math.floor(Date.now() / 1000) + 180,
       }),
     ]);
 
     await c.env.AUTHC1_ACTIVITY_QUEUE.send({
-      acitivity: "RequestPhoneVerification",
+      acitivity: EventsConfig.UserPhoneVerificationSent,
       phone,
       applicationId,
       created_at: Date.now(),

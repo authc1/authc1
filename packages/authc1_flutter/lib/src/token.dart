@@ -1,3 +1,6 @@
+import 'dart:convert';
+
+import 'package:authc1_flutter/src/types/session.dart';
 import 'package:hive/hive.dart';
 import 'package:path_provider/path_provider.dart' as path_provider;
 
@@ -17,28 +20,33 @@ class AccessTokenManager {
     final tokenJson = box.get(_authTokenKey);
 
     if (tokenJson != null) {
-      final authDetials = AuthDetails.fromJson(tokenJson);
-      return isAuthTokenValid(authDetials);
+      final authDetails = Session.fromJson(
+        jsonDecode(tokenJson),
+      );
+      return isAuthTokenValid(authDetails);
     }
 
     return false;
   }
 
-  static bool isAuthTokenValid(AuthDetails authDetials) {
+  static bool isAuthTokenValid(Session authDetials) {
     final currentTimeInSeconds = DateTime.now().millisecondsSinceEpoch ~/ 1000;
     return authDetials.expiresAt > currentTimeInSeconds;
   }
 
-  static Future<void> addLoggedInData(Map<String, dynamic> data) async {
+  static Future<void> addLoggedInData(String data) async {
     final box = await openHiveBox(_authBoxKey);
     await box.put(_authTokenKey, data);
   }
 
-  static Future<AuthDetails?> getAuthDetails() async {
+  static Future<Session?> getAuthDetails() async {
     final box = await openHiveBox(_authBoxKey);
-    final tokenJson = box.get(_authTokenKey) as Map<dynamic, dynamic>?;
+    final tokenJson = box.get(_authTokenKey);
     if (tokenJson != null) {
-      return AuthDetails.fromJson(tokenJson);
+      final authDetails = Session.fromJson(
+        jsonDecode(tokenJson),
+      );
+      return authDetails;
     }
     return null;
   }
@@ -50,11 +58,13 @@ class AccessTokenManager {
 
   static Future<String?> getRefreshToken() async {
     final box = await openHiveBox(_authBoxKey);
-    final tokenJson = box.get(_authTokenKey) as Map<dynamic, dynamic>?;
+    final tokenJson = box.get(_authTokenKey);
 
     if (tokenJson != null) {
-      final authToken = AuthDetails.fromJson(tokenJson);
-      return authToken.refreshToken;
+      final authDetails = Session.fromJson(
+        jsonDecode(tokenJson),
+      );
+      return authDetails.refreshToken;
     }
 
     return null;
@@ -62,22 +72,26 @@ class AccessTokenManager {
 
   static Future<void> updateAccessToken(String newAccessToken) async {
     final box = await openHiveBox(_authBoxKey);
-    final tokenJson = box.get(_authTokenKey) as Map<dynamic, dynamic>?;
+    final tokenJson = box.get(_authTokenKey);
 
     if (tokenJson != null) {
-      final authToken = AuthDetails.fromJson(tokenJson);
-      authToken.accessToken = newAccessToken;
-      await box.put(_authTokenKey, authToken.toJson());
+      final authDetails = Session.fromJson(
+        jsonDecode(tokenJson),
+      );
+      authDetails.updateAccessToken(newAccessToken);
+      await box.put(_authTokenKey, newAccessToken);
     }
   }
 
   static Future<String?> getAccessToken() async {
     final box = await openHiveBox(_authBoxKey);
-    final tokenJson = box.get(_authTokenKey) as Map<dynamic, dynamic>?;
+    final tokenJson = box.get(_authTokenKey);
 
     if (tokenJson != null) {
-      final authToken = AuthDetails.fromJson(tokenJson);
-      return authToken.accessToken;
+      final authDetails = Session.fromJson(
+        jsonDecode(tokenJson),
+      );
+      return authDetails.accessToken;
     }
 
     return null;
@@ -85,61 +99,20 @@ class AccessTokenManager {
 
   static Future<int?> getAccessTokenExpirationTime() async {
     final box = await openHiveBox(_authBoxKey);
-    final tokenJson = box.get(_authTokenKey) as Map<dynamic, dynamic>?;
+    final tokenJson = box.get(_authTokenKey);
 
     if (tokenJson != null) {
-      final authToken = AuthDetails.fromJson(tokenJson);
-      return authToken.expiresAt;
+      final authDetails = Session.fromJson(
+        jsonDecode(tokenJson),
+      );
+      return authDetails.expiresAt;
     }
 
     return null;
   }
-}
 
-class AuthDetails {
-  String accessToken;
-  String? email;
-  final String refreshToken;
-  final int expiresIn;
-  final int expiresAt;
-  final String localId;
-  String? name;
-  String? phone;
-
-  AuthDetails(
-    this.accessToken,
-    this.email,
-    this.refreshToken,
-    this.expiresIn,
-    this.expiresAt,
-    this.localId,
-    this.name,
-    this.phone,
-  );
-
-  factory AuthDetails.fromJson(Map<dynamic, dynamic> json) {
-    return AuthDetails(
-      json['access_token'] as String,
-      json['email'] as String?,
-      json['refresh_token'] as String,
-      json['expires_in'] as int,
-      json['expires_at'] as int,
-      json['local_id'] as String,
-      json['name'] as String?,
-      json['phone'] as String?,
-    );
-  }
-
-  Map<String, dynamic> toJson() {
-    return {
-      'access_token': accessToken,
-      'email': email,
-      'refresh_token': refreshToken,
-      'expires_in': expiresIn,
-      'expires_at': expiresAt,
-      'local_id': localId,
-      'name': name,
-      'phone': phone,
-    };
+  static Future<void> deleteAuthDetails() async {
+    final box = await openHiveBox(_authBoxKey);
+    await box.delete(_authTokenKey);
   }
 }

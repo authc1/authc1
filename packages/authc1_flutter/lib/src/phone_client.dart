@@ -2,17 +2,21 @@ import 'dart:convert';
 import 'dart:io';
 import 'package:authc1_flutter/src/authc1.dart';
 import 'package:authc1_flutter/src/token.dart';
+import 'package:authc1_flutter/src/types/session.dart';
 import 'http_client.dart';
 import 'dart:async';
 
 class PhoneClient {
   final HttpClient httpClient;
   final StreamController<AuthState> _authStateController;
+  final StreamController<Session?> _userChangesController;
 
   PhoneClient({
     required this.httpClient,
     required StreamController<AuthState> authStateController,
-  }) : _authStateController = authStateController;
+    required StreamController<Session?> userChangesController,
+  })  : _authStateController = authStateController,
+        _userChangesController = userChangesController;
 
   Future<void> sendOtp(String phone) async {
     const endpoint = '/phone/verify';
@@ -36,12 +40,12 @@ class PhoneClient {
     final response = await httpClient.post(endpoint, body);
 
     if (response.statusCode == HttpStatus.ok) {
-      final authDetails = AuthDetails.fromJson(
+      await AccessTokenManager.addLoggedInData(response.body);
+      _authStateController.add(AuthState.loggedIn);
+      final session = Session.fromJson(
         jsonDecode(response.body),
       );
-
-      await AccessTokenManager.addLoggedInData(authDetails.toJson());
-      _authStateController.add(AuthState.loggedIn);
+      _userChangesController.add(session);
     } else {
       _authStateController.add(AuthState.otpConfirmError);
       throw Exception(

@@ -60,7 +60,7 @@ export default component$(({ authState, applicationId, baseWssUrl }: Props) => {
                     <div class="text-gray-600 dark:text-gray-400">
                       <div class="text-base font-normal">
                         <span class="font-medium text-gray-900 dark:text-white pr-2">
-                          {item?.email}
+                          {item?.email || item?.phone}
                         </span>
                         {item?.acitivity}
                       </div>

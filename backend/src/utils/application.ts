@@ -24,7 +24,7 @@ export async function checkAccess(
   key: string,
   applicationId: string
 ): Promise<boolean> {
-  const userObjId = c.env.AuthC1User.idFromName(key);
+  const userObjId = c.env.AuthC1User.idFromString(key);
   const stub = c.env.AuthC1User.get(userObjId);
   const userClient = new UserClient(stub);
 

@@ -10,6 +10,7 @@ import {
 } from "../../utils/error-responses";
 import { hash } from "../../utils/hash";
 import { ApplicationRequest } from "../applications/create";
+import { EventsConfig } from "../../enums/events";
 
 async function verifyPassword(
   password: string,
@@ -72,12 +73,13 @@ export async function emailRegistrationController(c: Context) {
   const promises = await Promise.all([
     userClient.createUser(userData, applicationInfo),
     c.env.AUTHC1_ACTIVITY_QUEUE.send({
-      acitivity: "Registered",
+      acitivity: EventsConfig.UserRegistered,
       userId: userData?.id,
       applicationId,
       name: applicationInfo.name,
       email,
       created_at: new Date(),
+      provider: "email",
     }),
   ]);
 

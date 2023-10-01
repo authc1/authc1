@@ -9,6 +9,7 @@ import {
 } from "../../utils/error-responses";
 import { generateEmailVerificationCode } from "../../utils/string";
 import { ApplicationRequest } from "../applications/create";
+import { EventsConfig } from "../../enums/events";
 
 export interface ISendVerificationEmailParams {
   email: string;
@@ -81,14 +82,14 @@ export const emailValidationController = async (c: Context) => {
         emailVerificationCode,
         sessionId,
       }),
-      userClient.updateUser({
+      userClient.updateUser(applicationInfo, sessionId, {
         emailVerifyCode: emailVerificationCode,
         expirationTimestamp: Math.floor(Date.now() / 1000) + 180,
       }),
     ]);
 
     await c.env.AUTHC1_ACTIVITY_QUEUE.send({
-      acitivity: "RequestEmailVerification",
+      acitivity: EventsConfig.UserEmailVerificationSent,
       id: userId,
       applicationId,
       created_at: Date.now(),

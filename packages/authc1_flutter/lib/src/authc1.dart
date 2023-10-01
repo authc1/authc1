@@ -1,6 +1,9 @@
+import 'dart:convert';
 import 'dart:io';
 
 import 'package:authc1_flutter/src/token.dart';
+import 'package:authc1_flutter/src/types/session.dart';
+import 'package:authc1_flutter/src/types/user.dart';
 import 'package:flutter/widgets.dart';
 
 import 'http_client.dart';
@@ -15,6 +18,7 @@ class AuthC1 with WidgetsBindingObserver {
   late PhoneClient phoneClient;
   late SocialClient socialClient;
   late final StreamController<AuthState> _authStateController;
+  late final StreamController<Session?> _userChangesController;
   Timer? _refreshTimer;
   final Duration refreshThreshold = const Duration(minutes: 5);
 
@@ -23,6 +27,7 @@ class AuthC1 with WidgetsBindingObserver {
     String baseUrl = 'https://api.authc1.com/v1',
   }) {
     _authStateController = StreamController<AuthState>.broadcast();
+    _userChangesController = StreamController<Session?>.broadcast();
 
     WidgetsBinding.instance.addObserver(this);
     initializeAuthState();
@@ -34,16 +39,19 @@ class AuthC1 with WidgetsBindingObserver {
     emailClient = EmailClient(
       httpClient: httpClient,
       authStateController: _authStateController,
+      userChangesController: _userChangesController,
     );
 
     phoneClient = PhoneClient(
       httpClient: httpClient,
       authStateController: _authStateController,
+      userChangesController: _userChangesController,
     );
 
     socialClient = SocialClient(
       httpClient: httpClient,
       authStateController: _authStateController,
+      userChangesController: _userChangesController,
     );
   }
 
@@ -72,7 +80,8 @@ class AuthC1 with WidgetsBindingObserver {
     }
   }
 
-  Stream<AuthState> get onAuthStateChange => _authStateController.stream;
+  Stream<AuthState> get authStateChange => _authStateController.stream;
+  Stream<Session?> get userChanges => _userChangesController.stream;
 
   Future<void> sendOtp(String phone) {
     return phoneClient.sendOtp(phone);
@@ -94,30 +103,49 @@ class AuthC1 with WidgetsBindingObserver {
         .post(endpoint, {'refresh_token': refreshToken as String});
 
     if (response.statusCode == HttpStatus.ok) {
-      final newAccessToken = response.body;
+      final newAccessTokenDetails = response.body;
 
-      await AccessTokenManager.updateAccessToken(newAccessToken);
+      await AccessTokenManager.updateAccessToken(newAccessTokenDetails);
+      httpClient.updateAuthorization(newAccessTokenDetails);
+      final session = Session.fromJson(
+        jsonDecode(newAccessTokenDetails),
+      );
+      _addUserChanges(session);
     } else {
       throw Exception(
-          'Failed to refresh access token: ${response.statusCode}: ${response.body}');
+        'Failed to refresh access token: ${response.statusCode}: ${response.body}',
+      );
     }
   }
 
   void initializeAuthState() async {
     final initialAuthState = await getInitialAuthState();
-    _authStateController.add(initialAuthState);
+    if (initialAuthState != null) {
+      _authStateController.add(AuthState.loggedIn);
+      _addUserChanges(initialAuthState);
+    } else {
+      _authStateController.add(AuthState.loggedOut);
+      _addUserChanges(null);
+    }
     _startRefreshTimer();
   }
 
-  Future<AuthState> getInitialAuthState() async {
+  Future<Session?> getInitialAuthState() async {
     final authDetials = await AccessTokenManager.getAuthDetails();
     if (authDetials != null) {
       if (!AccessTokenManager.isAuthTokenValid(authDetials)) {
         await refreshAccessToken();
       }
-      return AuthState.loggedIn;
+
+      httpClient.updateAuthorization(authDetials.accessToken);
+
+      return authDetials;
     }
-    return AuthState.loggedOut;
+    return null;
+  }
+
+  void _addUserChanges(Session? session) {
+    _userChangesController.add(session);
   }
 
   void _startRefreshTimer() {
@@ -153,8 +181,27 @@ class AuthC1 with WidgetsBindingObserver {
     return AuthState.loggedOut;
   }
 
-  Future<AuthDetails?> getCurrentAuthDetails() async {
+  Future<Session?> getCurrentAuthDetails() async {
     return await AccessTokenManager.getAuthDetails();
+  }
+
+  Future<Session> updateUser(UserUpdateRequest payload) async {
+    const endpoint = '/accounts/user';
+
+    final response = await httpClient.post(endpoint, payload.toJson());
+
+    if (response.statusCode == HttpStatus.ok) {
+      final authDetails = Session.fromJson(jsonDecode(response.body));
+      return authDetails;
+    } else {
+      throw Exception('Failed to update user: ${response.statusCode}');
+    }
+  }
+
+  Future<void> logout() async {
+    await AccessTokenManager.deleteAuthDetails();
+    _authStateController.add(AuthState.loggedOut);
+    _addUserChanges(null);
   }
 
   void cancelAccessTokenTimer() {

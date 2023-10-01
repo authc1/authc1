@@ -1,26 +1,24 @@
 import { Context } from "hono";
-import { UserClient } from "../../../do/AuthC1User";
 import { checkAccess } from "../../../utils/application";
 import {
   handleError,
   unauthorizedDataRequestError,
 } from "../../../utils/error-responses";
+import { AuthC1ActivityClient } from "../../../do/AuthC1Activity";
 
 export const applicationActivitiesController = async (c: Context) => {
   const user = c.get("user");
   const applicationId = c.req.param("id");
-  const key = `${applicationId}:email:${user.email}`;
-  const hasAccess = checkAccess(c, key, applicationId);
+  const hasAccess = await checkAccess(c, user.user_id, applicationId);
   if (!hasAccess) {
     return handleError(unauthorizedDataRequestError, c);
   }
 
   const id = c.env.AuthC1Activity.idFromName(applicationId);
   const obj = c.env.AuthC1Activity.get(id);
+  const activityClient = new AuthC1ActivityClient(obj);
 
-  const res = await obj.fetch(`http://activity/activities`);
-
-  const data = await res.json();
+  const data = await activityClient.getActivities();
 
   return c.json({
     data,

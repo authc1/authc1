@@ -4,8 +4,10 @@ import { z } from "zod";
 import { ApplicationRequest } from "../controller/applications/create";
 import {
   ErrorResponse,
+  changeEmailNotAllowed,
   expiredOrInvalidCode,
   handleError,
+  phoneChangeNotAllowed,
 } from "../utils/error-responses";
 import { generateUniqueIdWithPrefix } from "../utils/string";
 import { createAccessToken, createRefreshToken } from "../utils/token";
@@ -20,6 +22,7 @@ export const schema = z
     password: z.string().optional(),
     provider: z.string(),
     emailVerified: z.boolean().default(false),
+    phoneVerified: z.boolean().default(false),
     avatarUrl: z.string().optional(),
     providerUserId: z.string().optional(),
     emailVerifyCode: z.string().optional(),
@@ -27,6 +30,8 @@ export const schema = z
     expirationTimestamp: z.number().optional(),
     created_at: z.string().datetime().optional(),
     updated_at: z.string().datetime().optional(),
+    claims: z.record(z.any()).nullish(),
+    segments: z.record(z.any()).nullish(),
   })
   .refine((data) => data.email || data.phone, {
     message: "Either email or phone must be provided",
@@ -102,25 +107,22 @@ export class AuthC1User implements DurableObject {
 
     this.app.post("/", async (c: Context) => {
       const data: {
-        app: ApplicationRequest;
+        appSettings: ApplicationRequest;
         user: UserData;
       } = await c.req.json();
-      const { app, user } = data;
+      const { appSettings, user } = data;
       const refreshToken = createRefreshToken(c);
       const sessionId = generateUniqueIdWithPrefix();
-      const accessToken = await createAccessToken({
-        userId: user.id,
-        expiresIn: app.settings.expires_in,
-        applicationName: app.name as string,
-        email: user.email,
-        emailVerified: user.emailVerified,
-        applicationId: app.id as string,
-        secret: app.settings.secret,
-        algorithm: app.settings.algorithm,
+      this.userData = {
+        ...user,
+        created_at: new Date().toISOString(),
+        updated_at: new Date().toISOString(),
+      };
+      const accessToken = await this.createAccessTokenForSession(
         sessionId,
-        name: user?.name || this.userData?.name,
-        provider: this.userData?.provider,
-      });
+        appSettings
+      );
+
       this.sessions = {
         ...this.sessions,
         [sessionId]: {
@@ -130,17 +132,18 @@ export class AuthC1User implements DurableObject {
           created_at: new Date().toISOString(),
         },
       };
-      this.userData = {
-        ...user,
-        created_at: new Date().toISOString(),
-        updated_at: new Date().toISOString(),
-      };
+
       await Promise.all([
         await this.state.storage?.put({
           userData: this.userData,
           sessions: this.sessions,
         }),
-        this.addRefreshToken(c, refreshToken, sessionId, app.id as string),
+        this.addRefreshToken(
+          c,
+          refreshToken,
+          sessionId,
+          appSettings.id as string
+        ),
       ]);
       return c.json({
         access_token: accessToken,
@@ -174,21 +177,102 @@ export class AuthC1User implements DurableObject {
     });
 
     this.app.patch("/", async (c: Context) => {
-      const userData: UserData = await c.req.json();
+      const req = await c.req.json();
+      const {
+        appSettings,
+        sessionId,
+        userData,
+      }: {
+        appSettings: ApplicationRequest;
+        sessionId: string;
+        userData: Partial<UserData>;
+      } = req;
+      const { claims = {}, segments = {} } = userData;
+      if (this.userData.provider === "email" && userData.email) {
+        return handleError(changeEmailNotAllowed, c);
+      }
+
+      if (this.userData.provider === "phone" && userData.phone) {
+        return handleError(phoneChangeNotAllowed, c);
+      }
+
+      const accessToken = await this.createAccessTokenForSession(
+        sessionId,
+        appSettings
+      );
+      const sessionData = this.sessions[sessionId];
+      this.sessions = {
+        ...this.sessions,
+        [sessionId]: {
+          ...sessionData,
+          accessToken,
+        },
+      };
+
       this.userData = {
         ...this.userData,
         ...userData,
+        claims:
+          claims === null
+            ? {}
+            : {
+                ...this.userData.claims,
+                ...claims,
+              },
+        segments: {
+          ...this.userData.segments,
+          ...segments,
+        },
       };
-      await this.state.storage?.put("userData", this.userData);
-      return c.json(this.userData || {});
-    });
 
-    this.app.get("/apps", async (c: Context) => {
+      await this.state.storage?.put({
+        sessions: this.sessions,
+        userData: this.userData,
+      });
       return c.json({
-        data: Object.values(this.apps || {}),
+        accessToken,
+        user: this.userData,
       });
     });
 
+    this.app.patch("/admin/user", async (c: Context) => {
+      const req = await c.req.json();
+      const {
+        userData,
+      }: {
+        userData: Partial<UserData>;
+      } = req;
+      const { claims = {}, segments = {} } = userData;
+      this.userData = {
+        ...this.userData,
+        ...userData,
+        claims:
+          claims === null
+            ? {}
+            : {
+                ...this.userData.claims,
+                ...claims,
+              },
+        segments:
+          segments === null
+            ? {}
+            : {
+                ...this.userData.segments,
+                ...segments,
+              },
+      };
+
+      await this.state.storage?.put("userData", this.userData);
+      return c.json({
+        user: this.userData,
+      });
+    });
+
+    this.app.get("/apps", async (c: Context) => {
+      return c.json(this.apps);
+    });
+
+    // TODO: @subh we might not need this anymore, can be handled in the method like this.app.patch("/verifyPhone"
     this.app.post("/sessions", async (c: Context) => {
       const {
         appSettings,
@@ -200,19 +284,10 @@ export class AuthC1User implements DurableObject {
         sessionId: string;
         refreshToken: string;
       } = await c.req.json();
-      const accessToken = await createAccessToken({
-        userId: this.userData.id,
-        expiresIn: appSettings.settings.expires_in,
-        applicationName: appSettings.name as string,
-        email: this.userData.email,
-        emailVerified: this.userData.emailVerified,
-        applicationId: appSettings.id as string,
-        secret: appSettings.settings.secret,
-        algorithm: appSettings.settings.algorithm,
+      const accessToken = await this.createAccessTokenForSession(
         sessionId,
-        name: this.userData.name,
-        provider: this.userData?.provider,
-      });
+        appSettings
+      );
       const sessionData = {
         sessionId,
         accessToken,
@@ -288,19 +363,10 @@ export class AuthC1User implements DurableObject {
 
       const sessionId = generateUniqueIdWithPrefix();
       const refreshToken = createRefreshToken(c);
-      const accessToken = await createAccessToken({
-        userId: this.userData.id,
-        expiresIn: appSettings.settings.expires_in,
-        applicationName: appSettings.name as string,
-        phone: this.userData.phone,
-        emailVerified: false,
-        applicationId: appSettings.id as string,
-        secret: appSettings.settings.secret,
-        algorithm: appSettings.settings.algorithm,
+      const accessToken = await this.createAccessTokenForSession(
         sessionId,
-        name: this.userData.name,
-        provider: this.userData?.provider,
-      });
+        appSettings
+      );
       const newSession = {
         sessionId,
         accessToken,
@@ -311,7 +377,7 @@ export class AuthC1User implements DurableObject {
         [sessionId]: newSession,
       };
       this.userData.expirationTimestamp = undefined;
-      console.log(refreshToken, appSettings);
+      this.userData.phoneVerified = true;
       await Promise.all([
         await this.state.storage?.put({
           userData: this.userData,
@@ -344,19 +410,10 @@ export class AuthC1User implements DurableObject {
       const sessionId = generateUniqueIdWithPrefix();
       const refreshToken = createRefreshToken(c);
       this.userData.emailVerified = true;
-      const accessToken = await createAccessToken({
-        userId: this.userData.id,
-        expiresIn: appSettings.settings.expires_in,
-        applicationName: appSettings.name as string,
-        email: this.userData.email,
-        emailVerified: true,
-        applicationId: appSettings.id as string,
-        secret: appSettings.settings.secret,
-        algorithm: appSettings.settings.algorithm,
+      const accessToken = await this.createAccessTokenForSession(
         sessionId,
-        name: this.userData.name,
-        provider: this.userData?.provider,
-      });
+        appSettings
+      );
       const newSession = {
         sessionId,
         accessToken,
@@ -389,19 +446,10 @@ export class AuthC1User implements DurableObject {
       const refreshToken = createRefreshToken(c);
       this.userData.emailVerified = true;
       this.userData.password = password;
-      const accessToken = await createAccessToken({
-        userId: this.userData.id,
-        expiresIn: appSettings.settings.expires_in,
-        applicationName: appSettings.name as string,
-        email: this.userData.email,
-        emailVerified: true,
-        applicationId: appSettings.id as string,
-        secret: appSettings.settings.secret,
-        algorithm: appSettings.settings.algorithm,
+      const accessToken = await this.createAccessTokenForSession(
         sessionId,
-        name: this.userData.name,
-        provider: this.userData?.provider,
-      });
+        appSettings
+      );
       const newSession = {
         sessionId,
         accessToken,
@@ -426,24 +474,10 @@ export class AuthC1User implements DurableObject {
         return handleError(expiredOrInvalidCode, c);
       }
 
-      const { email, emailVerified, name: userName } = this.userData;
-      const { settings, id, name } = appSettings;
-      const { secret, algorithm } = settings;
-      const { expires_in: expiresIn } = settings;
-
-      const accessToken = await createAccessToken({
-        userId: this.userData.id,
-        expiresIn,
-        applicationName: name as string,
-        email,
-        emailVerified,
-        applicationId: id as string,
-        secret,
-        algorithm,
+      const accessToken = await this.createAccessTokenForSession(
         sessionId,
-        name: userName,
-        provider: this.userData?.provider,
-      });
+        appSettings
+      );
 
       this.sessions = {
         ...this.sessions,
@@ -453,16 +487,7 @@ export class AuthC1User implements DurableObject {
         },
       };
 
-      /* const appId = c.env.AuthC1App.idFromName(appSettings.id);
-      const applicationObj = c.env.AuthC1App.get(appId);
-      const appClient = new ApplicationClient(applicationObj, c); */
-
-      await Promise.all([
-        this.state.storage?.put("sessions", this.sessions),
-        /* appClient.updateUser({
-          lastLogin: new Date().toISOString(),
-        }), */
-      ]);
+      await Promise.all([this.state.storage?.put("sessions", this.sessions)]);
 
       return c.json({
         accessToken,
@@ -488,6 +513,28 @@ export class AuthC1User implements DurableObject {
     );
   }
 
+  private async createAccessTokenForSession(
+    sessionId: string,
+    appSettings: ApplicationRequest
+  ): Promise<string> {
+    return createAccessToken({
+      userId: this.userData.id,
+      expiresIn: appSettings.settings.expires_in,
+      applicationName: appSettings.name as string,
+      email: this.userData.email,
+      emailVerified: this.userData.emailVerified,
+      phoneVerified: this.userData.phoneVerified,
+      applicationId: appSettings.id as string,
+      secret: appSettings.settings.secret,
+      algorithm: appSettings.settings.algorithm,
+      sessionId,
+      name: this.userData?.name,
+      provider: this.userData?.provider,
+      claims: this.userData.claims,
+      segments: this.userData.segments || {},
+    });
+  }
+
   async fetch(request: Request) {
     return this.app.fetch(request, this.env);
   }
@@ -508,7 +555,7 @@ export class UserClient {
       method: "POST",
       body: JSON.stringify({
         user: json,
-        app: appSettings,
+        appSettings,
       }),
     });
     const data: AuthResponse = await res.json();
@@ -560,12 +607,27 @@ export class UserClient {
     return data;
   }
 
-  async updateUser(json: Partial<UserData>) {
+  async updateUser(
+    appSettings: ApplicationRequest,
+    sessionId: string,
+    userData: Partial<UserData>
+  ): Promise<AuthResponse | ErrorResponse> {
     const res = await this.user.fetch("http://user/", {
       method: "PATCH",
-      body: JSON.stringify(json),
+      body: JSON.stringify({ appSettings, sessionId, userData }),
     });
-    const data = await res.json();
+    const data: AuthResponse | ErrorResponse = await res.json();
+    return data;
+  }
+
+  async updateUserByAdmin(
+    userData: Partial<UserData>
+  ): Promise<AuthResponse | ErrorResponse> {
+    const res = await this.user.fetch("http://user/admin/user", {
+      method: "PATCH",
+      body: JSON.stringify({ userData }),
+    });
+    const data: AuthResponse | ErrorResponse = await res.json();
     return data;
   }
 
@@ -622,6 +684,7 @@ export class UserClient {
         appSettings,
       }),
     });
+
     if (!res.ok) {
       const errorData: ErrorResponse = await res.json();
       throw new Error(errorData.error.code);

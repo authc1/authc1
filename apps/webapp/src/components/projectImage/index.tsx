@@ -10,7 +10,13 @@ export default component$(({ src, name, alt }: Props) => {
   return (
     <div class="relative w-7 h-7 rounded-full overflow-hidden bg-gradient-to-r from-pink-500 to-yellow-500">
       {src ? (
-        <img class="w-full h-full object-cover" src={src} alt={alt} />
+        <img
+          class="w-full h-full object-cover"
+          src={src}
+          alt={alt}
+          width={30}
+          height={30}
+        />
       ) : (
         <div class="flex items-center justify-center text-black-500 text-xl lowercase">
           <span>{name?.split("")[0]}</span>

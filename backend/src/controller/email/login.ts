@@ -9,9 +9,10 @@ import {
 } from "../../utils/error-responses";
 
 import { generateUniqueIdWithPrefix } from "../../utils/string";
-import { createRefreshToken } from "../../utils/token";
+import { createRefreshToken, generateSessionResponse } from "../../utils/token";
 import { ApplicationRequest } from "../applications/create";
 import { hash } from "../../utils/hash";
+import { EventsConfig } from "../../enums/events";
 
 export const loginSchema = z.object({
   email: z.string(),
@@ -82,7 +83,7 @@ export async function emailLoginController(c: Context) {
       user.id as string
     ),
     c.env.AUTHC1_ACTIVITY_QUEUE.send({
-      acitivity: "LoggedIn",
+      acitivity: EventsConfig.UserLoggedIn,
       userId: user?.id,
       applicationId: applicationInfo?.id,
       name: applicationInfo.name,
@@ -95,14 +96,21 @@ export async function emailLoginController(c: Context) {
 
   const { accessToken } = authDetails;
 
-  return c.json({
-    access_token: accessToken,
-    email,
-    refresh_token: refreshToken,
-    expires_in: applicationInfo.settings.expires_in,
-    expires_at:
-      Math.floor(Date.now() / 1000) + applicationInfo.settings.expires_in,
-    local_id: user.id,
-    name: user?.name,
+  const response = generateSessionResponse({
+    accessToken,
+    refreshToken,
+    expiresIn: applicationInfo.settings.expires_in,
+    sessionId,
+    userId: user.id,
+    provider: user.provider,
+    emailVerified: user.emailVerified,
+    phoneVerified: user.phoneVerified,
+    email: user.email as string,
+    phone: user.phone as string,
+    name: user.name as string,
+    avatarUrl: user.avatarUrl as string,
+    claims: user.claims,
   });
+
+  return c.json(response);
 }

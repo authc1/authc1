@@ -36,6 +36,7 @@ export const useUpdateApplicationAction = routeAction$(
   async (data, { cookie, fail, redirect, params, env }) => {
     const baseUrl = env.get("VITE_API_URL") as string;
     const appId = env.get("VITE_APPLICTION_ID") as string;
+    console.log("useUpdateApplicationAction", JSON.stringify(data));
     const results = await updateApplicationById(
       data,
       params?.id,
@@ -59,6 +60,8 @@ export const useUpdateApplicationAction = routeAction$(
       expires_in: z.coerce.number().optional().nullable(),
       secret: z.string().optional().nullable(),
       algorithm: z.string().optional().nullable(),
+      is_dev_mode: z.boolean().default(true),
+      dev_mode_code: z.string().default("333333"),
       redirect_uri: z
         .array(z.any())
         .transform((as) =>
@@ -147,6 +150,7 @@ export default component$(() => {
                     schema={settingsFields}
                     defaultValues={{
                       ...data?.settings,
+                      dev_mode_code: data?.settings?.dev_mode_code || "333333",
                       application_id: data?.id,
                     }}
                   />
@@ -168,7 +172,7 @@ export default component$(() => {
   );
 });
 
-export const applicationsHead: DocumentHead = {
+export const head: DocumentHead = {
   title: "AuthC1 Applications - View and Edit Application Details",
   meta: [
     {

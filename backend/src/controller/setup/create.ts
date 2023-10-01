@@ -19,6 +19,8 @@ export const schema = z.object({
       expires_in: z.number().default(86400),
       secret: z.string().default(() => generateRandomID() + generateRandomID()),
       algorithm: z.string().default("HS256"),
+      is_dev_mode: z.boolean().default(true),
+      dev_mode_code: z.string().default("333333"),
       redirect_uri: z.array(z.string().url()).optional(),
       two_factor_authentication: z.boolean().default(false),
       allow_multiple_accounts: z.boolean().default(false),

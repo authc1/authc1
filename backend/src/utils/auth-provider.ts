@@ -11,6 +11,7 @@ import {
 } from "./error-responses";
 import { createRefreshToken } from "./token";
 import type { BaseProvider, SocialProvider } from "worker-auth-providers";
+import { EventsConfig } from "../enums/events";
 
 interface ProviderOptions<T extends SocialProvider> {
   providerConfig: {
@@ -69,12 +70,13 @@ async function handleUserCreationOrUpdate(
     const promises = await Promise.all([
       userClient.createSession(applicationInfo, sessionId, refreshToken),
       c.env.AUTHC1_ACTIVITY_QUEUE.send({
-        acitivity: "LoggedIn",
+        acitivity: EventsConfig.UserLoggedIn,
         userId: userData?.id,
         applicationId: applicationInfo?.id,
         name: applicationInfo.name,
         email,
         created_at: new Date(),
+        providerId
       }),
     ]);
 
@@ -102,12 +104,13 @@ async function handleUserCreationOrUpdate(
     const promises = await Promise.all([
       userClient.createUser(userData, applicationInfo),
       c.env.AUTHC1_ACTIVITY_QUEUE.send({
-        acitivity: "LoggedIn",
+        acitivity: EventsConfig.UserRegistered,
         userId: userData?.id,
         applicationId,
         name: applicationInfo.name,
         email,
         created_at: new Date(),
+        providerId
       }),
     ]);
 

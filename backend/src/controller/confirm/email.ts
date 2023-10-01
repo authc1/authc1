@@ -1,5 +1,4 @@
 import { Context } from "hono";
-import { html } from "hono/html";
 import { z } from "zod";
 import { UserClient } from "../../do/AuthC1User";
 import {
@@ -9,6 +8,7 @@ import {
   registrationError,
 } from "../../utils/error-responses";
 import { ApplicationRequest } from "../applications/create";
+import { EventsConfig } from "../../enums/events";
 
 export const confirmEmailByCodeSchema = z.object({
   code: z.string(),
@@ -45,7 +45,7 @@ export const confirmEmailControllerByCode = async (c: Context) => {
         applicationInfo
       ),
       c.env.AUTHC1_ACTIVITY_QUEUE.send({
-        acitivity: "EmailConfirmedByCode",
+        acitivity: EventsConfig.UserEmailVerified,
         id: user?.user_id,
         applicationId,
         created_at: Date.now(),

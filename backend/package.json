@@ -5,7 +5,7 @@
     "start": "echo 'No build script for this package'",
     "build": "echo 'No build script for this package'",
     "dev": "npx wrangler dev",
-    "deploy": "npx wrangler publish src/index.ts"
+    "deploy": "npx wrangler deploy src/index.ts"
   },
   "dependencies": {
     "@aws-sdk/client-ses": "^3.321.1",

@@ -1,4 +1,5 @@
 import { Context, Hono } from "hono";
+import { AuthC1ActivityClient } from "../../../do/AuthC1Activity";
 
 const listenController = async (c: Context) => {
   const applicationId = c.req.param("applicationId");
@@ -9,15 +10,11 @@ const listenController = async (c: Context) => {
   originalHeaders.forEach((value, key) => {
     headers.append(key, value);
   });
-  const resp = await obj.fetch(`https://activity/listen/${applicationId}`, {
-    headers,
-  });
+  const activityClient = new AuthC1ActivityClient(obj);
 
-  if (resp.status === 404) {
-    return c.text("404 Not Found", 404);
-  }
+  const data = await activityClient.listen(applicationId, headers);
 
-  return resp;
+  return data;
 };
 
 export default listenController;

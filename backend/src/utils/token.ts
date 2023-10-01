@@ -8,6 +8,7 @@ type Payload = {
   expiresIn: number;
   applicationName: string;
   emailVerified: boolean;
+  phoneVerified: boolean;
   applicationId: string;
   secret: string;
   algorithm: string;
@@ -16,6 +17,8 @@ type Payload = {
   name?: string;
   email?: string;
   phone?: string;
+  claims: any;
+  segments: any;
 };
 
 interface AuthToken {
@@ -51,9 +54,10 @@ export async function createAccessToken(payload: Payload): Promise<string> {
     sessionId,
     provider = "email",
     name,
+    claims,
+    segments,
   } = payload;
 
-  // TODO: Remove provider hardcoded value
   const accessToken = await sign(
     {
       iss: `https://authc1.com/${applicationId}`,
@@ -65,9 +69,11 @@ export async function createAccessToken(payload: Payload): Promise<string> {
       email,
       email_verified: emailVerified,
       phone,
-      provider: provider,
+      provider,
       session_id: sessionId,
       name,
+      claims,
+      segments,
     },
     secret,
     algorithm
@@ -106,4 +112,80 @@ export async function getUserFromToken(
   }
 
   return payload;
+}
+
+type SessionRequestArgs = {
+  accessToken: string;
+  refreshToken: string;
+  expiresIn: number;
+  sessionId: string;
+  provider: string;
+  userId: string;
+  emailVerified: boolean;
+  phoneVerified: boolean;
+  email: string;
+  phone: string;
+  name: string;
+  avatarUrl: string;
+  claims: any;
+  segments: any;
+};
+
+export interface SessionResponse {
+  access_token: string;
+  refresh_token: string;
+  expires_in: number;
+  expires_at: number;
+  session_id: string;
+  provider: string;
+  user: {
+    local_id: string | null;
+    email_verified: boolean | null;
+    email: string | null;
+    phone: string | null;
+    name: string | null;
+    phone_verified: boolean | null;
+    avatar_url: string | null;
+  };
+  claims: any;
+  segments: any;
+}
+
+export function generateSessionResponse({
+  accessToken,
+  refreshToken,
+  expiresIn,
+  sessionId,
+  userId,
+  provider,
+  emailVerified,
+  phoneVerified,
+  email,
+  phone,
+  name,
+  avatarUrl,
+  claims,
+  segments,
+}: SessionRequestArgs): SessionResponse {
+  const expiresAt = Math.floor(Date.now() / 1000) + expiresIn;
+
+  return {
+    access_token: accessToken,
+    refresh_token: refreshToken,
+    expires_in: expiresIn,
+    expires_at: expiresAt,
+    session_id: sessionId,
+    provider,
+    user: {
+      local_id: userId,
+      email_verified: emailVerified || false,
+      phone_verified: phoneVerified || false,
+      email: email || null,
+      phone: phone || null,
+      name: name || null,
+      avatar_url: avatarUrl || null,
+    },
+    claims: claims || {},
+    segments: segments || {},
+  };
 }

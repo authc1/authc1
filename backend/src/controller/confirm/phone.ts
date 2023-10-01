@@ -1,14 +1,14 @@
 import { Context } from "hono";
-import { html } from "hono/html";
 import { z } from "zod";
 import { UserClient } from "../../do/AuthC1User";
 import {
   expiredOrInvalidCode,
-  expiredOrInvalidLink,
   handleError,
   registrationError,
 } from "../../utils/error-responses";
 import { ApplicationRequest } from "../applications/create";
+import { EventsConfig } from "../../enums/events";
+import { generateSessionResponse } from "../../utils/token";
 
 export const phoneConfirmSchema = z.object({
   code: z.string(),
@@ -33,7 +33,14 @@ export const phoneConfirmController = async (c: Context) => {
     const promises = await Promise.all([
       userClient.verifyPhoneCodeAndUpdate(code, applicationInfo),
       c.env.AUTHC1_ACTIVITY_QUEUE.send({
-        acitivity: "PhoneConfirmedByCode",
+        acitivity: EventsConfig.UserPhoneVerified,
+        phone,
+        id: user.id,
+        applicationId,
+        created_at: Date.now(),
+      }),
+      c.env.AUTHC1_ACTIVITY_QUEUE.send({
+        acitivity: EventsConfig.UserLoggedIn,
         phone,
         id: user.id,
         applicationId,
@@ -43,16 +50,24 @@ export const phoneConfirmController = async (c: Context) => {
 
     const [authDetails] = promises;
 
-    return c.json({
-      access_token: authDetails?.accessToken,
-      refresh_token: authDetails?.refreshToken,
-      expires_in: applicationInfo.settings.expires_in,
-      expires_at:
-        Math.floor(Date.now() / 1000) + applicationInfo.settings.expires_in,
-      name: user?.name,
-      local_id: user.id,
-      phone: user.phone,
+    const response = generateSessionResponse({
+      accessToken: authDetails?.accessToken,
+      refreshToken: authDetails?.refreshToken,
+      expiresIn: applicationInfo.settings.expires_in,
+      sessionId: authDetails?.sessionId,
+      userId: user?.id as string,
+      provider: user?.provider as string,
+      emailVerified: user?.emailVerified as boolean,
+      phoneVerified: user?.phoneVerified as boolean,
+      email: user?.email as string,
+      phone: user?.phone as string,
+      name: user?.name as string,
+      avatarUrl: user?.avatarUrl as string,
+      claims: user?.claims,
+      segments: user?.segments,
     });
+
+    return c.json(response);
   } catch (err: any) {
     console.log(err);
     if (err.message === expiredOrInvalidCode.error.code) {

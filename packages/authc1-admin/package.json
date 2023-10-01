@@ -1,0 +1,33 @@
+{
+  "name": "@authc1/admin",
+  "version": "0.0.1-beta-6",
+  "type": "module",
+  "description": "Admin sdk for Authc1",
+  "main": "dist/index.js",
+  "module": "dist/index.js",
+  "types": "dist/index.d.ts",
+  "files": [
+    "dist/"
+  ],
+  "scripts": {
+    "build": "tsc --build",
+    "dev": "echo 'No build script for this package'"
+  },
+  "exports": {
+    ".": {
+      "require": "./dist/index.js",
+      "import": "./dist/index.js"
+    }
+  },
+  "keywords": [],
+  "author": "",
+  "license": "MIT",
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/authc1/authc1.git"
+  },
+  "bugs": {
+    "url": "https://github.com/authc1/authc1/issues"
+  },
+  "homepage": "https://github.com/authc1/authc1#readme"
+}

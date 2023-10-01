@@ -15,7 +15,7 @@ export const defaultSettings: ProviderSettings = {
   password_regex: "^(?=.*[A-Z])(?=.*[!@#$%^&*])(?=.*[0-9])(?=.*[a-z]).{8,}$",
 
   phone_provider_enabled: false,
-  text_template_body: "",
+  text_template_body: "Your Varification code is {{code}}",
 
   discord_provider_enabled: false,
   discord_client_id: "",

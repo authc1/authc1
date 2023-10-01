@@ -24,17 +24,11 @@ export class AuthC1Activity {
   sessions: Session[] = [];
   state: DurableObjectState;
   app: Hono = new Hono();
-  messages: Activity[] = [];
   env: Bindings;
 
   constructor(state: DurableObjectState, env: Bindings, ctx: Context) {
     this.state = state;
     this.env = env;
-
-    this.state.blockConcurrencyWhile(async () => {
-      const stored = await this.state.storage?.get<Activity[]>("messages");
-      this.messages = stored || [];
-    });
 
     this.app.get("/activities", async (c) => {
       let storage = await this.state.storage.list({
@@ -45,15 +39,17 @@ export class AuthC1Activity {
       let backlog = [...storage.values()];
       backlog.reverse();
       const data = backlog.map((item): string => JSON.parse(item as string));
-      return c.json({
-        data,
-      });
+      return c.json(data);
     });
 
-    this.app.put("/webhook/push", async (c) => {
+    this.app.put("/webhook/push", async (c: Context) => {
       const body: any = await c.req.json();
       const { clientId, ...data } = body;
       this.sendToClientId(JSON.stringify({ ...data }), clientId);
+      const id = c.env.AuthC1App.idFromString(clientId);
+      const applicationObj = c.env.AuthC1App.get(id);
+      const applicationClient = new ApplicationClient(applicationObj);
+      await applicationClient.pushToWebhook({ ...data });
       return c.json({
         data: "push",
       });
@@ -133,15 +129,15 @@ export class AuthC1Activity {
     });
   }
 
-  sendToClientId = (message: string, clientId: string) => {
+  sendToClientId = async (message: string, clientId: string) => {
     const sessions = this.sessions.filter(
       (s: Session) => s.clientId === clientId
     );
 
+    let key = new Date().toISOString();
+    await this.state.storage.put(key, message);
     sessions.forEach(async (session) => {
       try {
-        let key = new Date().toISOString();
-        await this.state.storage.put(key, message);
         session.webSocket.send(message);
       } catch (error) {
         session.quit = true;
@@ -152,5 +148,39 @@ export class AuthC1Activity {
 
   async fetch(request: Request) {
     return this.app.fetch(request, this.env);
+  }
+}
+
+export class AuthC1ActivityClient {
+  activity: DurableObjectStub;
+
+  constructor(activity: DurableObjectStub) {
+    this.activity = activity;
+  }
+
+  async getActivities(): Promise<Activity[]> {
+    const res = await this.activity.fetch(`http://activity/activities`);
+    const data: Activity[] = await res.json();
+    return data;
+  }
+
+  async pushWebhook(data: any): Promise<Response> {
+    const res = await this.activity.fetch("http://activity/webhook/push", {
+      method: "PUT",
+      body: JSON.stringify(data),
+    });
+    return res;
+  }
+
+  async listen(id: string, headers: Headers): Promise<Response> {
+    try {
+      const res = await this.activity.fetch(`http://activity/listen/${id}`, {
+        headers,
+      });
+      return res;
+    } catch (error) {
+      console.error(`Error in listen method: ${error}`);
+      throw error;
+    }
   }
 }

@@ -49,8 +49,27 @@ export default component$(() => {
         </Link>
       </li>
       <li>
-        <Link class="inline-block p-4 text-gray-400 rounded-t-lg cursor-not-allowed dark:text-gray-500">
-          Webhook
+        <Link
+          href={`/applications/${id}/webhooks`}
+          class={
+            pathname === `/applications/${id}/webhooks/`
+              ? "inline-block p-4 text-blue-600 bg-gray-100 rounded-t-lg active dark:bg-gray-800 dark:text-blue-500"
+              : "inline-block p-4 rounded-t-lg hover:text-light hover:bg-gray-50 dark:hover:bg-dark dark:hover:text-light"
+          }
+        >
+          Webhooks
+        </Link>
+      </li>
+      <li>
+        <Link
+          href={`/applications/${id}/apikeys`}
+          class={
+            pathname === `/applications/${id}/apikeys/`
+              ? "inline-block p-4 text-blue-600 bg-gray-100 rounded-t-lg active dark:bg-gray-800 dark:text-blue-500"
+              : "inline-block p-4 rounded-t-lg hover:text-light hover:bg-gray-50 dark:hover:bg-dark dark:hover:text-light"
+          }
+        >
+          API keys
         </Link>
       </li>
     </ul>

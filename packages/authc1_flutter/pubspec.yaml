@@ -1,6 +1,6 @@
 name: authc1_flutter
 description: Flutter integration for AuthC1.
-version: 0.0.1-dev.8
+version: 0.0.1-dev.19
 homepage: 'https://authc1.com'
 
 environment:
@@ -27,3 +27,4 @@ platforms:
   windows:
 
 flutter:
+

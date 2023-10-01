@@ -5,10 +5,12 @@ import { applicationsRoutes } from "./routes/application";
 import { providersRoutes } from "./routes/providers";
 import { setupRoutes } from "./routes/setup";
 import { webhookRoutes } from "./routes/webhook";
+import { AuthC1ActivityClient } from "./do/AuthC1Activity";
 export { AuthC1App } from "./do/AuthC1App";
 export { AuthC1User } from "./do/AuthC1User";
 export { AuthC1Token } from "./do/AuthC1Token";
 export { AuthC1Activity } from "./do/AuthC1Activity";
+import { adminRoutes } from "./routes/admin";
 
 type Bindings = {
   AuthC1App: DurableObjectNamespace;
@@ -39,6 +41,7 @@ app.get("/", (ctx: Context) => ctx.text("Are you sure?"));
 v1Routes.route("/:appId", providersRoutes);
 v1Routes.route("/:appId/applications", applicationsRoutes);
 v1Routes.route("/:appId/accounts", accountsRoutes);
+v1Routes.route("/:appId/admin", adminRoutes);
 v1Routes.route("/:appId/webhook", webhookRoutes);
 
 
@@ -68,10 +71,8 @@ export default {
         clientId: applicationId,
         ...rest,
       };
-      return obj.fetch(`http://activity/webhook/push`, {
-        method: "PUT",
-        body: JSON.stringify(json),
-      });
+      const activityClient = new AuthC1ActivityClient(obj);
+      return activityClient.pushWebhook(json);
     });
     await Promise.allSettled(promises);
   },

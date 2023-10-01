@@ -11,6 +11,6 @@ export const listApplicationController = async (c: Context) => {
   const userAccessData = await userClient.getAccess();
 
   return c.json({
-    ...userAccessData,
+    data: Object.values(userAccessData || {}),
   });
 };

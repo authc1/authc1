@@ -11,10 +11,7 @@ import { ApplicationRequest } from "../applications/create";
 const getUserByIdController = async (c: Context) => {
   try {
     const user = c.get("user");
-    const applicationInfo: ApplicationRequest = c.get("applicationInfo");
-    const { email } = user;
-    const key = `${applicationInfo?.id}:email:${email}`;
-    const userObjId = c.env.AuthC1User.idFromName(key);
+    const userObjId = c.env.AuthC1User.idFromString(user.user_id);
     const stub = c.env.AuthC1User.get(userObjId);
     const userClient = new UserClient(stub);
     const data = await userClient.getUser();

@@ -6,14 +6,10 @@ import {
   updateApplicationError,
   refreshTokenNotValidError,
 } from "../../../utils/error-responses";
-import {
-  handleSuccess,
-  SuccessResponse,
-} from "../../../utils/success-responses";
-import { sign } from "../../../middleware/jwt";
 import { ApplicationRequest } from "../../applications/create";
 import { TokenClient } from "../../../do/AuthC1Token";
 import { UserClient } from "../../../do/AuthC1User";
+import { generateSessionResponse } from "../../../utils/token";
 
 export const schema = z.object({
   refresh_token: z.string(),
@@ -49,16 +45,23 @@ export const updateAccessTokenByRefreshToken = async (c: Context) => {
       applicationInfo
     );
 
-    return c.json({
-      access_token: accessToken,
-      refresh_token: refreshToken,
-      expires_in: expiresIn,
-      expires_at:
-        Math.floor(Date.now() / 1000) + applicationInfo.settings.expires_in,
-      session_id: tokenInfo.sessionId,
-      local_id: tokenInfo?.userId,
-      email_verified: user?.emailVerified,
+    const response = generateSessionResponse({
+      accessToken,
+      refreshToken,
+      expiresIn,
+      sessionId: tokenInfo.sessionId,
+      userId: user?.id as string,
+      provider: user?.provider as string,
+      emailVerified: user?.emailVerified as boolean,
+      phoneVerified: user?.phoneVerified as boolean,
+      email: user?.email as string,
+      phone: user?.phone as string,
+      name: user?.name as string,
+      avatarUrl: user?.avatarUrl as string,
+      claims: user?.claims,
     });
+
+    return c.json(response);
   } catch (err: any) {
     console.log(err);
 

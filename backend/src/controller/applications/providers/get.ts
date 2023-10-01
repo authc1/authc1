@@ -29,8 +29,7 @@ const getApplicationProvidersController = async (c: Context) => {
     const user = c.get("user");
     const applicationId = c.req.param("id");
     const applicationInfo = c.get("applicationInfo") as ApplicationRequest;
-    const key = `${applicationId}:email:${user.email}`;
-    const hasAccess = checkAccess(c, key, applicationId);
+    const hasAccess = await checkAccess(c, user.user_id, applicationId);
     if (!hasAccess) {
       return handleError(unauthorizedDataRequestError, c);
     }

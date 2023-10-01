@@ -3,7 +3,7 @@ import 'dart:convert';
 import 'package:http/http.dart' as http;
 
 class HttpClient {
-  final String? authorization;
+  String? authorization;
   final String baseUrl;
   final String appId;
 
@@ -13,7 +13,7 @@ class HttpClient {
     required this.appId,
   });
 
-  Future<http.Response> post(String endpoint, Map<String, String> body) async {
+  Future<http.Response> post(String endpoint, Map<String, dynamic> body) async {
     final headers = <String, String>{};
     if (authorization != null) {
       headers['Authorization'] = authorization!;
@@ -22,5 +22,9 @@ class HttpClient {
     final response = await http.post(Uri.parse("$baseUrl/$appId$endpoint"),
         headers: headers, body: jsonEncode(body));
     return response;
+  }
+
+  void updateAuthorization(String newAuthorization) {
+    authorization = newAuthorization;
   }
 }

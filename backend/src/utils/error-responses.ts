@@ -111,6 +111,23 @@ export const expiredOrInvalidCode: ErrorResponse = {
   status: 404,
 };
 
+export const changeEmailNotAllowed: ErrorResponse = {
+  error: {
+    code: "CHANGE_EMAIL_NOT_ALLOWED",
+    message: "Changing email while provider is email is not allowed.",
+  },
+  status: 403,
+};
+
+export const phoneChangeNotAllowed: ErrorResponse = {
+  error: {
+    code: "PHONE_CHANGE_NOT_ALLOWED",
+    message: "Changing phone while provider is phone is not allowed.",
+  },
+  status: 403,
+};
+
+
 export const loginError: ErrorResponse = {
   error: {
     code: "LOGIN_ERROR",
@@ -222,6 +239,74 @@ export const createApplicationError: ErrorResponse = {
   },
   status: 500,
 };
+
+export const createWebhookEndpointError: ErrorResponse = {
+  error: {
+    code: "CREATE_WEBHOOK_ENDPOINT_ERROR",
+    message: "Error occurred while creating the webhook endpoint.",
+  },
+  status: 500,
+};
+
+export const createApiKeyError: ErrorResponse = {
+  error: {
+    code: "CREATE_API_KEY_ERROR",
+    message: "Error occurred while creating the API key.",
+  },
+  status: 500,
+};
+
+export const updateApiKeyError: ErrorResponse = {
+  error: {
+    code: "UPDATE_API_KEY_ERROR",
+    message: "Error occurred while updating the API key.",
+  },
+  status: 500,
+};
+
+export const deleteApiKeyError: ErrorResponse = {
+  error: {
+    code: "DELETE_API_KEY_ERROR",
+    message: "Error occurred while deleting the API key.",
+  },
+  status: 500,
+};
+
+export const apiKeyNotFoundError: ErrorResponse = {
+  error: {
+    code: "API_KEY_NOT_FOUND",
+    message: "The requested API key could not be found.",
+  },
+  status: 404,
+};
+
+
+
+export const deleteWebhookEndpointError: ErrorResponse = {
+  error: {
+    code: "DELETE_WEBHOOK_ENDPOINT_ERROR",
+    message: "Error occurred while deleting the webhook endpoint.",
+  },
+  status: 500,
+};
+
+export const webhookNotFoundError: ErrorResponse = {
+  error: {
+    code: "WEBHOOK_NOT_FOUND",
+    message: "The requested webhook endpoint could not be found.",
+  },
+  status: 404,
+};
+
+export const updateWebhookEndpointError: ErrorResponse = {
+  error: {
+    code: "UPDATE_WEBHOOK_ENDPOINT_ERROR",
+    message: "Error occurred while updating the webhook endpoint.",
+  },
+  status: 500,
+};
+
+
 
 export const invalidInputError: ErrorResponse = {
   error: {

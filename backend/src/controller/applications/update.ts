@@ -21,6 +21,8 @@ export const schema = z.object({
       expires_in: z.number().optional(),
       secret: z.string().optional(),
       algorithm: z.string().optional(),
+      is_dev_mode: z.boolean().default(true),
+      dev_mode_code: z.string().default("333333"),
       redirect_uri: z.array(z.string().url()).optional(),
       two_factor_authentication: z.boolean().optional(),
       allow_multiple_accounts: z.boolean().optional(),
@@ -36,8 +38,7 @@ export const updateApplicationController = async (c: Context) => {
     const body: Partial<ApplicationRequest> = await c.req.valid("json");
     const applicationId = c.req.param("id");
     const user = c.get("user");
-    const key = `${applicationId}:email:${user.email}`;
-    const hasAccess = checkAccess(c, key, applicationId);
+    const hasAccess = await checkAccess(c, user.user_id, applicationId);
 
     if (!hasAccess) {
       return handleError(unauthorizedDataRequestError, c);

@@ -2,6 +2,7 @@ import { component$ } from "@builder.io/qwik";
 import { Link, useLocation } from "@builder.io/qwik-city";
 import { NavLink } from "../footer";
 import UserDropdown from "../user-dropdown/user-dropdown";
+import ImgAuthc1Logo from "~/media/logo/authc1-logo.svg?jsx";
 
 export const authenticatedNavigation = [
   { label: "Dashboard", href: "/dashboard", target: "_self" },
@@ -11,12 +12,12 @@ export const unAuthenticatedNavigation = [
   {
     label: "Documentation",
     href: "https://docs.authc1.com",
-    target: "_blank"
+    target: "_blank",
   },
   {
     label: "Pricing",
     href: "/pricing",
-    target: "_self"
+    target: "_self",
   },
 ];
 
@@ -39,11 +40,7 @@ export default component$(
       <header class="flex items-center justify-between p-4 border-b border-gray-900/10 dark:border-gray-300/10">
         <Link href="/">
           <div class="flex items-center">
-            <img
-              src="/logo/authc1-logo.svg"
-              alt="AuthC1 Logo"
-              class="w-12 h-12"
-            />
+            <ImgAuthc1Logo alt="AuthC1 Logo" class="w-12 h-12" />
           </div>
         </Link>
         <nav class="flex items-center">

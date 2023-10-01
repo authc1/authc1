@@ -13,7 +13,10 @@ import {
 } from "../../../../utils/success-responses";
 import { sendEmail } from "../../../../utils/email";
 import { ISendVerificationEmailParams } from "../../../verify/email";
-import { generateEmailVerificationCode } from "../../../../utils/string";
+import {
+  generateEmailVerificationCode,
+  generateUniqueIdWithPrefix,
+} from "../../../../utils/string";
 import { VerifyPayload } from "../../../../middleware/jwt";
 import { ApplicationRequest } from "../../../applications/create";
 import { UserClient } from "../../../../do/AuthC1User";
@@ -67,6 +70,7 @@ const sendResetCodeController = async (c: Context) => {
     const userObjId = c.env.AuthC1User.idFromName(key);
     const stub = c.env.AuthC1User.get(userObjId);
     const userClient = new UserClient(stub);
+    const sessionId = generateUniqueIdWithPrefix();
 
     await Promise.all([
       sendVerificationEmail(c, {
@@ -77,7 +81,7 @@ const sendResetCodeController = async (c: Context) => {
         senderEmail,
         emailVerificationCode,
       }),
-      userClient.updateUser({
+      userClient.updateUser(applicationInfo, sessionId, {
         emailVerifyCode: emailVerificationCode,
         expirationTimestamp: Math.floor(Date.now() / 1000) + 180,
       }),
